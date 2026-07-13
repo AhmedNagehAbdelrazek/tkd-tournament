@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "TKD Tournament API",
-    "description": "Postman collection for the Taekwondo Match Management System\n\nBase URL: {{base_url}}\nAuth: Bearer token via {{auth_token}}\n\nEndpoints:\n- Auth: POST /api/auth/tkd/login\n- Clubs: GET/POST /api/clubs\n- Tournaments: GET/POST /api/tournaments\n- Players: GET/POST /api/players\n- Matches: POST /api/matches/generate, GET /api/matches/:id\n- Match State: POST /api/matches/:id/start|pause|resume|end|cancel",
+    "description": "Postman collection for the Taekwondo Match Management System\n\nBase URL: {{base_url}}\nAuth: Bearer token via {{auth_token}}\n\nEndpoints:\n- Health: GET /api/healthz\n- Auth: POST /api/auth/tkd/login, POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me, PATCH /api/auth/me\n- Clubs: GET/POST /api/clubs\n- Tournaments: GET/POST /api/tournaments, GET /api/tournaments/:id\n- Players: GET/POST /api/players, POST /api/players/bulk\n- Matches: POST /api/matches/generate, GET /api/matches/:id\n- Match State: POST /api/matches/:id/start|pause|resume|end|cancel\n- HTTP Fallback Scoring: POST /api/matches/:id/points, POST /api/matches/:id/remove-points, POST /api/matches/:id/end-round",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -57,6 +57,135 @@
               "code": 200,
               "header": [{ "key": "Content-Type", "value": "application/json" }],
               "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIs...\",\n  \"user\": {\n    \"id\": 1,\n    \"name\": \"Admin User\",\n    \"email\": \"admin@example.com\",\n    \"role\": \"ADMIN\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/signup",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "signup"]
+            }
+          },
+          "response": [
+            {
+              "name": "Signup Success",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": 2,\n  \"email\": \"newuser@example.com\",\n  \"role\": \"customer\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Global Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "  pm.collectionVariables.set('auth_token', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": [
+            {
+              "name": "Login Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIs...\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            }
+          },
+          "response": [
+            {
+              "name": "Profile",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"email\": \"admin@example.com\",\n  \"name\": \"Admin User\",\n  \"role\": \"admin\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            }
+          },
+          "response": [
+            {
+              "name": "Profile Updated",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"email\": \"admin@example.com\",\n  \"name\": \"Updated Name\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/healthz",
+              "host": ["{{base_url}}"],
+              "path": ["healthz"]
+            }
+          },
+          "response": [
+            {
+              "name": "Healthy",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"ok\"\n}"
             }
           ]
         }
@@ -415,6 +544,78 @@
               "status": "OK",
               "code": 200,
               "body": "{\n  \"id\": 1,\n  \"status\": \"CANCELLED\",\n  \"cancelledAt\": \"2026-07-13T12:00:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Add Points (HTTP Fallback)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"playerId\": 1,\n  \"points\": 3,\n  \"roundNumber\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/matches/{{match_id}}/points",
+              "host": ["{{base_url}}"],
+              "path": ["matches", "{{match_id}}", "points"]
+            }
+          },
+          "response": [
+            {
+              "name": "Points Added",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"status\": \"IN_PROGRESS\",\n    \"scorePlayer1\": 3,\n    \"scorePlayer2\": 0,\n    \"player1\": { \"id\": 1, \"name\": \"Alice\" },\n    \"player2\": { \"id\": 2, \"name\": \"Bob\" }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Remove Points (HTTP Fallback)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"playerId\": 1,\n  \"points\": 1,\n  \"roundNumber\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/matches/{{match_id}}/remove-points",
+              "host": ["{{base_url}}"],
+              "path": ["matches", "{{match_id}}", "remove-points"]
+            }
+          },
+          "response": [
+            {
+              "name": "Points Removed",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"status\": \"IN_PROGRESS\",\n    \"scorePlayer1\": 2,\n    \"scorePlayer2\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "End Round (HTTP Fallback)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roundNumber\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/matches/{{match_id}}/end-round",
+              "host": ["{{base_url}}"],
+              "path": ["matches", "{{match_id}}", "end-round"]
+            }
+          },
+          "response": [
+            {
+              "name": "Round Ended",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"status\": \"IN_PROGRESS\",\n    \"currentRound\": 2\n  }\n}"
             }
           ]
         }

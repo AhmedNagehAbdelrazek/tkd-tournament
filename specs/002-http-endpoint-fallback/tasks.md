@@ -22,9 +22,9 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T001 Create rate limiter middleware in middlewares/rateLimiter.js — sliding window counter per client (userId + endpoint), configurable limit (default 2/sec), returns 429 with Retry-After header, periodic cleanup of stale entries
-- [ ] T002 [P] Create scoring validation rules in utils/validators/matchValidator.js — express-validator rules for addPoint (playerId required integer, points required integer ≥ 1, roundNumber optional integer 1-3), removePoint (same), endRound (roundNumber optional integer 1-3)
-- [ ] T003 [P] Create unit tests for rate limiter in tests/unit/rateLimiter.test.js — test sliding window enforcement, 429 response with Retry-After header, cleanup of stale entries, different clients tracked independently
+- [x] T001 Create rate limiter middleware in middlewares/rateLimiter.js — sliding window counter per client (userId + endpoint), configurable limit (default 2/sec), returns 429 with Retry-After header, periodic cleanup of stale entries
+- [x] T002 [P] Create scoring validation rules in utils/validators/matchValidator.js — express-validator rules for addPoint (playerId required integer, points required integer ≥ 1, roundNumber optional integer 1-3), removePoint (same), endRound (roundNumber optional integer 1-3)
+- [x] T003 [P] Create unit tests for rate limiter in tests/unit/rateLimiter.test.js — test sliding window enforcement, 429 response with Retry-After header, cleanup of stale entries, different clients tracked independently
 
 **Checkpoint**: Foundation ready — user story implementation can now begin
 
@@ -40,15 +40,15 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T004 [P] [US1] Create contract tests for scoring endpoints in tests/contract/http-fallback.test.js — test POST /api/matches/:id/points response shape matches contracts/rest-api.md, POST /api/matches/:id/remove-points response shape, POST /api/matches/:id/end-round response shape, error response shapes (401, 403, 404, 409, 422)
-- [ ] T005 [P] [US1] Create integration tests for HTTP scoring in tests/integration/http-fallback.test.js — test full flow: start match → add points via HTTP → verify score and MatchEvent, remove points → verify, end round → verify; test role enforcement (SCOREKEEPER gets 403); test match not IN_PROGRESS returns 409
+- [x] T004 [P] [US1] Create contract tests for scoring endpoints in tests/contract/http-fallback.test.js — test POST /api/matches/:id/points response shape matches contracts/rest-api.md, POST /api/matches/:id/remove-points response shape, POST /api/matches/:id/end-round response shape, error response shapes (401, 403, 404, 409, 422)
+- [x] T005 [P] [US1] Create integration tests for HTTP scoring in tests/integration/http-fallback.test.js — test full flow: start match → add points via HTTP → verify score and MatchEvent, remove points → verify, end round → verify; test role enforcement (SCOREKEEPER gets 403); test match not IN_PROGRESS returns 409
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] Add addPoint controller method in Controllers/matchController.js — extract playerId, points, roundNumber from req.body; call scoringService.addPoint(); return successResponse with full match state from matchService.getMatchState()
-- [ ] T007 [US1] Add removePoint controller method in Controllers/matchController.js — extract playerId, points, roundNumber from req.body; call scoringService.removePoint(); return successResponse with full match state
-- [ ] T008 [US1] Add endRound controller method in Controllers/matchController.js — extract roundNumber from req.body; call scoringService.endRound(); return successResponse with full match state
-- [ ] T009 [US1] Register scoring routes in Routes/matchRoutes.js — POST /:id/points with tkdProtect + tkdRoleGuard(MAT_JUDGE) + rateLimiter(2) + matchPointValidation + validate, POST /:id/remove-points with same middleware chain, POST /:id/end-round with tkdProtect + tkdRoleGuard(MAT_JUDGE) + rateLimiter(1) + endRoundValidation + validate
+- [x] T006 [US1] Add addPoint controller method in Controllers/matchController.js — extract playerId, points, roundNumber from req.body; call scoringService.addPoint(); return successResponse with full match state from matchService.getMatchState()
+- [x] T007 [US1] Add removePoint controller method in Controllers/matchController.js — extract playerId, points, roundNumber from req.body; call scoringService.removePoint(); return successResponse with full match state
+- [x] T008 [US1] Add endRound controller method in Controllers/matchController.js — extract roundNumber from req.body; call scoringService.endRound(); return successResponse with full match state
+- [x] T009 [US1] Register scoring routes in Routes/matchRoutes.js — POST /:id/points with tkdProtect + tkdRoleGuard(MAT_JUDGE) + rateLimiter(2) + matchPointValidation + validate, POST /:id/remove-points with same middleware chain, POST /:id/end-round with tkdProtect + tkdRoleGuard(MAT_JUDGE) + rateLimiter(1) + endRoundValidation + validate
 
 **Checkpoint**: HTTP scoring endpoints fully functional — MAT_JUDGE can score via HTTP, non-MAT_JUDGE gets 403
 
@@ -64,13 +64,13 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T010 [P] [US2] Add contract tests for GET /api/matches/:id polling in tests/contract/http-fallback.test.js — test response shape matches contracts/rest-api.md polling contract, verify full state includes player1, player2, latestEvent, scores, status
-- [ ] T011 [P] [US2] Add integration tests for HTTP polling in tests/integration/http-fallback.test.js — test poll returns consistent state after scoring actions, test multiple sequential polls return same state when no changes, test poll with rate limit (10/sec for GET)
+- [x] T010 [P] [US2] Add contract tests for GET /api/matches/:id polling in tests/contract/http-fallback.test.js — test response shape matches contracts/rest-api.md polling contract, verify full state includes player1, player2, latestEvent, scores, status
+- [x] T011 [P] [US2] Add integration tests for HTTP polling in tests/integration/http-fallback.test.js — test poll returns consistent state after scoring actions, test multiple sequential polls return same state when no changes, test poll with rate limit (10/sec for GET)
 
 ### Implementation for User Story 2
 
-- [ ] T012 [US2] Verify existing GET /api/matches/:id endpoint returns full match state with player associations and latest MatchEvent — update matchController.getById if needed to include club and latestEvent via matchmakingService.getMatchDetail()
-- [ ] T013 [US2] Add rate limiter (10/sec) to GET /:id route in Routes/matchRoutes.js for polling support
+- [x] T012 [US2] Verify existing GET /api/matches/:id endpoint returns full match state with player associations and latest MatchEvent — update matchController.getById if needed to include club and latestEvent via matchmakingService.getMatchDetail()
+- [x] T013 [US2] Add rate limiter (10/sec) to GET /:id route in Routes/matchRoutes.js for polling support
 
 **Checkpoint**: HTTP polling fully functional — clients can poll for match state at 1/sec with 10/sec rate limit
 
@@ -86,13 +86,13 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T014 [P] [US3] Add rate limit integration tests in tests/integration/http-fallback.test.js — test 429 response after exceeding 2/sec limit on POST scoring endpoints, test Retry-After header present, test different clients have independent limits, test 10/sec limit on GET polling endpoint
-- [ ] T015 [P] [US3] Add error handling tests in tests/integration/http-fallback.test.js — test 401 for missing/bad token, test 403 for wrong role, test 404 for non-existent match, test 409 for match not IN_PROGRESS, test 422 for invalid body (missing playerId, points < 1)
+- [x] T014 [P] [US3] Add rate limit integration tests in tests/integration/http-fallback.test.js — test 429 response after exceeding 2/sec limit on POST scoring endpoints, test Retry-After header present, test different clients have independent limits, test 10/sec limit on GET polling endpoint
+- [x] T015 [P] [US3] Add error handling tests in tests/integration/http-fallback.test.js — test 401 for missing/bad token, test 403 for wrong role, test 404 for non-existent match, test 409 for match not IN_PROGRESS, test 422 for invalid body (missing playerId, points < 1)
 
 ### Implementation for User Story 3
 
-- [ ] T016 [US3] Add rate limiter to all scoring POST routes in Routes/matchRoutes.js — apply rateLimiter(2) to /:id/points and /:id/remove-points, apply rateLimiter(1) to /:id/end-round
-- [ ] T017 [US3] Ensure all error responses match contract shapes in Controllers/matchController.js — verify ApiErrors usage for 401/403/404/409/422 responses matches contracts/rest-api.md error tables
+- [x] T016 [US3] Add rate limiter to all scoring POST routes in Routes/matchRoutes.js — apply rateLimiter(2) to /:id/points and /:id/remove-points, apply rateLimiter(1) to /:id/end-round
+- [x] T017 [US3] Ensure all error responses match contract shapes in Controllers/matchController.js — verify ApiErrors usage for 401/403/404/409/422 responses matches contracts/rest-api.md error tables
 
 **Checkpoint**: Rate limiting and error handling complete — all endpoints return contract-compliant responses
 
@@ -102,9 +102,9 @@
 
 **Purpose**: Documentation, Postman collection, final validation
 
-- [ ] T018 [P] Update Postman collection in postman/collection.json — add POST /api/matches/:id/points, POST /api/matches/:id/remove-points, POST /api/matches/:id/end-round requests with bodies, auth, and example responses matching contracts/rest-api.md
-- [ ] T019 Run quickstart.md validation — execute all quickstart commands manually, verify endpoints work as documented
-- [ ] T020 Run full test suite — npm test to verify all contract, integration, and unit tests pass
+- [x] T018 [P] Update Postman collection in postman/collection.json — add POST /api/matches/:id/points, POST /api/matches/:id/remove-points, POST /api/matches/:id/end-round requests with bodies, auth, and example responses matching contracts/rest-api.md
+- [x] T019 Run quickstart.md validation — execute all quickstart commands manually, verify endpoints work as documented
+- [x] T020 Run full test suite — npm test to verify all contract, integration, and unit tests pass
 
 ---
 

@@ -1,5 +1,6 @@
 const matchService = require('../Services/matchService');
 const matchmakingService = require('../Services/matchmakingService');
+const scoringService = require('../Services/scoringService');
 const { successResponse } = require('../utils/httpResponse');
 
 const generate = async (req, res, next) => {
@@ -52,4 +53,30 @@ const getById = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { generate, start, pause, resume, endMatch, cancel, getById };
+const addPoint = async (req, res, next) => {
+  try {
+    const { playerId, points, roundNumber } = req.body;
+    await scoringService.addPoint(req.params.id, playerId, points, roundNumber);
+    const match = await matchmakingService.getMatchDetail(req.params.id);
+    successResponse(res, match);
+  } catch (err) { next(err); }
+};
+
+const removePoint = async (req, res, next) => {
+  try {
+    const { playerId, points, roundNumber } = req.body;
+    await scoringService.removePoint(req.params.id, playerId, points, roundNumber);
+    const match = await matchmakingService.getMatchDetail(req.params.id);
+    successResponse(res, match);
+  } catch (err) { next(err); }
+};
+
+const endRound = async (req, res, next) => {
+  try {
+    await scoringService.endRound(req.params.id);
+    const match = await matchmakingService.getMatchDetail(req.params.id);
+    successResponse(res, match);
+  } catch (err) { next(err); }
+};
+
+module.exports = { generate, start, pause, resume, endMatch, cancel, getById, addPoint, removePoint, endRound };

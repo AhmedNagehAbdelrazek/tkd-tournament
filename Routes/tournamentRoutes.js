@@ -3,6 +3,8 @@ const protect = require('../middlewares/protect');
 const { tkdRoleGuard } = require('../middlewares/protect');
 const roleGuard = require('../middlewares/roleGuard');
 const c = require('../Controllers/tournamentController');
+const validate = require('../middlewares/validatorMiddleware');
+const { createTournamentValidation } = require('../utils/validators/tournamentValidator');
 
 function adminGuard(req, res, next) {
   const globalAdmin = ['admin', 'super_admin'].includes(req.user?.globalRole);
@@ -13,6 +15,6 @@ function adminGuard(req, res, next) {
 
 router.get('/', protect, c.list);
 router.get('/:id', protect, c.getById);
-router.post('/', protect, adminGuard, c.create);
+router.post('/', protect, adminGuard, createTournamentValidation, validate, c.create);
 
 module.exports = router;
