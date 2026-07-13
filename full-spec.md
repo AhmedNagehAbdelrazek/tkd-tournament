@@ -1,0 +1,19 @@
+# Backend Requirements Document Outline
+- Authentication & Roles: (Admin, Head Judge, Mat Judge, Scorekeeper).
+- Tournament & Settings API: CRUD for tournaments, weight classes, round durations, rest rules.
+- Player Management API: CRUD for players, bulk Excel upload endpoint (or frontend parses and sends JSON), club assignments.
+- Matchmaking Engine API:
+  - Trigger Generation: Endpoint to generate brackets based on settings.
+  - Algorithm Constraints: Explicitly document the "Club Avoidance" math logic so the backend dev implements it correctly (e.g., "If Club A has > 50% of the weight class, intra-club matches are permitted").
+- Live Match Execution API (Crucial for Real-time):
+  - Match State Machine: Endpoints to Start, Pause, Resume, and End a match.
+  - WebSockets/SSE: Real-time channel for broadcasting match status, timer ticks (optional, or just sync start/end times), and scores to all connected clients (judges, display boards).
+  - Post-Match Actions: Endpoints to record Winner, Retry, or Cancel.
+- Rest Period Tracker: Backend needs to calculate and expose when a player is legally allowed to fight next based on their last match end time and the configured rest period.
+- Protocol: WebSockets (e.g., Socket.io) are now mandatory for the Live Match module.
+- Scoring Events:
+  - MATCH:ADD_POINT (Payload: matchId, playerId, points, roundNumber)
+  - MATCH:REMOVE_POINT (Payload: matchId, playerId, points, roundNumber)
+  - MATCH:END_ROUND (Payload: matchId)
+- Backend Validation (Crucial): The backend must validate scoring rules. For example, if Taekwondo rules state a match ends automatically if the point gap reaches 20, the backend must catch this, end the match, and broadcast a MATCH:FINISHED_BY_POINT_GAP event to all clients.
+- State Synchronization: The backend acts as the single source of truth. If a judge's tablet disconnects and reconnects, it must fetch the exact current state (timer, scores, round) from the backend.
