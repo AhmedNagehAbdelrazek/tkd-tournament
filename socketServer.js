@@ -1,4 +1,7 @@
 const { Server } = require('socket.io');
+const socketAuth = require('./socket/middleware/socketAuth');
+const { registerScoringHandlers } = require('./socket/handlers/scoringHandler');
+const { TKD_ROLES } = require('./config/constants');
 
 function createSocketServer(httpServer) {
   const io = new Server(httpServer, {
@@ -8,12 +11,18 @@ function createSocketServer(httpServer) {
     },
   });
 
-  io.on('connection', (socket) => {
-    console.log('Client connected:', socket.id);
+  socketAuth(io);
+
+  const liveMatches = io.of('/live-matches');
+
+  liveMatches.on('connection', (socket) => {
+    console.log('TKD client connected:', socket.id, 'role:', socket.tkdRole);
 
     socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
+      console.log('TKD client disconnected:', socket.id);
     });
+
+    registerScoringHandlers(liveMatches, socket);
   });
 
   return io;

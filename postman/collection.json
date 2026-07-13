@@ -1,0 +1,424 @@
+{
+  "info": {
+    "name": "TKD Tournament API",
+    "description": "Postman collection for the Taekwondo Match Management System\n\nBase URL: {{base_url}}\nAuth: Bearer token via {{auth_token}}\n\nEndpoints:\n- Auth: POST /api/auth/tkd/login\n- Clubs: GET/POST /api/clubs\n- Tournaments: GET/POST /api/tournaments\n- Players: GET/POST /api/players\n- Matches: POST /api/matches/generate, GET /api/matches/:id\n- Match State: POST /api/matches/:id/start|pause|resume|end|cancel",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000/api" },
+    { "key": "auth_token", "value": "" },
+    { "key": "tournament_id", "value": "" },
+    { "key": "player_id", "value": "" },
+    { "key": "club_id", "value": "" },
+    { "key": "match_id", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "TKD Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "  pm.collectionVariables.set('auth_token', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/tkd/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "tkd", "login"]
+            }
+          },
+          "response": [
+            {
+              "name": "Login Success",
+              "originalRequest": { "method": "POST", "url": { "raw": "{{base_url}}/auth/tkd/login" } },
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIs...\",\n  \"user\": {\n    \"id\": 1,\n    \"name\": \"Admin User\",\n    \"email\": \"admin@example.com\",\n    \"role\": \"ADMIN\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Clubs",
+      "item": [
+        {
+          "name": "Create Club",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dragon TKD Club\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/clubs", "host": ["{{base_url}}"], "path": ["clubs"] }
+          },
+          "response": [
+            {
+              "name": "Club Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Dragon TKD Club\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Clubs",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/clubs", "host": ["{{base_url}}"], "path": ["clubs"] }
+          },
+          "response": [
+            {
+              "name": "Clubs List",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"clubs\": [\n    {\n      \"id\": 1,\n      \"name\": \"Dragon TKD Club\",\n      \"playerCount\": 5\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tournaments",
+      "item": [
+        {
+          "name": "Create Tournament",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "  pm.collectionVariables.set('tournament_id', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Summer Championship 2026\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-03\",\n  \"settings\": {\n    \"roundDurationSec\": 120,\n    \"restBetweenRoundsSec\": 60,\n    \"restBetweenMatchesMin\": 15,\n    \"pointGapAutoEnd\": 20,\n    \"weightClasses\": [\n      { \"name\": \"10-15kg\", \"min\": 10, \"max\": 15 },\n      { \"name\": \"15-20kg\", \"min\": 15, \"max\": 20 }\n    ]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tournaments",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments"]
+            }
+          },
+          "response": [
+            {
+              "name": "Tournament Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Summer Championship 2026\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-03\",\n  \"settings\": {\n    \"roundDurationSec\": 120,\n    \"restBetweenRoundsSec\": 60,\n    \"restBetweenMatchesMin\": 15,\n    \"pointGapAutoEnd\": 20,\n    \"weightClasses\": [\n      { \"name\": \"10-15kg\", \"min\": 10, \"max\": 15 },\n      { \"name\": \"15-20kg\", \"min\": 15, \"max\": 20 }\n    ]\n  },\n  \"createdAt\": \"2026-07-13T12:00:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Tournament By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments", "{{tournament_id}}"]
+            }
+          },
+          "response": [
+            {
+              "name": "Tournament Details",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Summer Championship 2026\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-03\",\n  \"settings\": {...},\n  \"isCompleted\": false,\n  \"playerCount\": 10,\n  \"matchCount\": 5\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Tournaments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/tournaments",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments"]
+            }
+          },
+          "response": [
+            {
+              "name": "Tournament List",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"tournaments\": [...],\n  \"total\": 1\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Players",
+      "item": [
+        {
+          "name": "Register Player",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tournamentId\": {{tournament_id}},\n  \"name\": \"John Doe\",\n  \"dob\": \"2010-05-15\",\n  \"weight\": 12.5,\n  \"gender\": \"MALE\",\n  \"clubId\": {{club_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": ["{{base_url}}"],
+              "path": ["players"]
+            }
+          },
+          "response": [
+            {
+              "name": "Player Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": 1,\n  \"name\": \"John Doe\",\n  \"dob\": \"2010-05-15\",\n  \"age\": 16,\n  \"yearOfBirth\": 2010,\n  \"weight\": 12.5,\n  \"gender\": \"MALE\",\n  \"clubId\": 1,\n  \"clubName\": \"Dragon TKD Club\",\n  \"tournamentId\": 1,\n  \"photoUrl\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Bulk Register Players",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tournamentId\": {{tournament_id}},\n  \"players\": [\n    {\n      \"name\": \"Jane Doe\",\n      \"dob\": \"2011-03-20\",\n      \"weight\": 11.0,\n      \"gender\": \"FEMALE\",\n      \"clubId\": {{club_id}}\n    },\n    {\n      \"name\": \"Bob Smith\",\n      \"dob\": \"2009-11-10\",\n      \"weight\": 14.0,\n      \"gender\": \"MALE\",\n      \"clubId\": {{club_id}}\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/players/bulk",
+              "host": ["{{base_url}}"],
+              "path": ["players", "bulk"]
+            }
+          },
+          "response": [
+            {
+              "name": "Bulk Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"created\": 2,\n  \"errors\": []\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Players",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/players?tournamentId={{tournament_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["players"]
+            },
+            "params": [
+              { "key": "tournamentId", "value": "{{tournament_id}}" }
+            ]
+          },
+          "response": [
+            {
+              "name": "Players List",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"players\": [\n    {\n      \"id\": 1,\n      \"name\": \"John Doe\",\n      \"age\": 16,\n      \"yearOfBirth\": 2010,\n      \"weight\": 12.5,\n      \"gender\": \"MALE\",\n      \"clubId\": 1,\n      \"clubName\": \"Dragon TKD Club\",\n      \"photoUrl\": null\n    }\n  ],\n  \"total\": 1\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Matches",
+      "item": [
+        {
+          "name": "Generate Bracket",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.matches && jsonData.matches.length > 0) {",
+                  "  pm.collectionVariables.set('match_id', jsonData.matches[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tournamentId\": {{tournament_id}},\n  \"weightClass\": \"10-15kg\",\n  \"gender\": \"MALE\",\n  \"matchType\": \"SINGLE_ELIMINATION\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/matches/generate",
+              "host": ["{{base_url}}"],
+              "path": ["matches", "generate"]
+            }
+          },
+          "response": [
+            {
+              "name": "Bracket Generated",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"matches\": [\n    {\n      \"id\": 1,\n      \"player1Id\": 1,\n      \"player1Name\": \"John Doe\",\n      \"player2Id\": 2,\n      \"player2Name\": \"Bob Smith\",\n      \"scheduledTime\": \"2026-08-01T09:00:00.000Z\",\n      \"intraClubWarning\": true,\n      \"bracketRound\": 1\n    }\n  ],\n  \"totalMatches\": 1,\n  \"warnings\": [\n    { \"matchId\": 1, \"reason\": \"intra_club_match\" }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Match By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/matches/{{match_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["matches", "{{match_id}}"]
+            }
+          },
+          "response": [
+            {
+              "name": "Match Details",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"tournamentId\": 1,\n  \"type\": \"SINGLE_ELIMINATION\",\n  \"status\": \"SCHEDULED\",\n  \"currentRound\": 1,\n  \"scorePlayer1\": 0,\n  \"scorePlayer2\": 0,\n  \"intraClubWarning\": false,\n  \"player1\": { \"id\": 1, \"name\": \"John Doe\" },\n  \"player2\": { \"id\": 2, \"name\": \"Bob Smith\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Start Match",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/matches/{{match_id}}/start",
+              "host": ["{{base_url}}"],
+              "path": ["matches", "{{match_id}}", "start"]
+            }
+          },
+          "response": [
+            {
+              "name": "Match Started",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"status\": \"IN_PROGRESS\",\n  \"startedAt\": \"2026-07-13T12:00:00.000Z\",\n  \"currentRound\": 1\n}"
+            }
+          ]
+        },
+        {
+          "name": "Pause Match",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/matches/{{match_id}}/pause",
+              "host": ["{{base_url}}"],
+              "path": ["matches", "{{match_id}}", "pause"]
+            }
+          },
+          "response": [
+            {
+              "name": "Match Paused",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"status\": \"PAUSED\",\n  \"pausedAt\": \"2026-07-13T12:05:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Resume Match",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/matches/{{match_id}}/resume",
+              "host": ["{{base_url}}"],
+              "path": ["matches", "{{match_id}}", "resume"]
+            }
+          },
+          "response": [
+            {
+              "name": "Match Resumed",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"status\": \"IN_PROGRESS\",\n  \"resumedAt\": \"2026-07-13T12:06:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "End Match",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"winnerId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/matches/{{match_id}}/end",
+              "host": ["{{base_url}}"],
+              "path": ["matches", "{{match_id}}", "end"]
+            }
+          },
+          "response": [
+            {
+              "name": "Match Ended",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"status\": \"FINISHED\",\n  \"winnerId\": 1,\n  \"endTime\": \"2026-07-13T12:10:00.000Z\",\n  \"finalScore\": {\n    \"player1\": 25,\n    \"player2\": 18\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Cancel Match",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/matches/{{match_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["matches", "{{match_id}}", "cancel"]
+            }
+          },
+          "response": [
+            {
+              "name": "Match Cancelled",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"status\": \"CANCELLED\",\n  \"cancelledAt\": \"2026-07-13T12:00:00.000Z\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -46,6 +46,11 @@ User.init(
             type: DataTypes.BOOLEAN,
             allowNull: true,
             defaultValue: true,
+        },
+        tkdRole: {
+            type: DataTypes.ENUM('ADMIN', 'HEAD_JUDGE', 'MAT_JUDGE', 'SCOREKEEPER'),
+            allowNull: true,
+            field: 'tkd_role',
         }
     },
     {

@@ -1,14 +1,8 @@
 const router = require('express').Router();
-const c = require('../Controllers/authController');
-const protect = require('../middlewares/protect');
 const { tkdLogin } = require('../Services/tkdAuthService');
 const { successResponse } = require('../utils/httpResponse');
 
-router.post('/signup', c.signup);
-router.post('/login', c.login);
-router.get('/me', protect, c.me);
-router.patch('/me', protect, c.updateProfile);
-router.post('/tkd/login', async (req, res, next) => {
+router.post('/login', async (req, res, next) => {
   try {
     const result = await tkdLogin(req.body);
     successResponse(res, result);

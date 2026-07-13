@@ -18,12 +18,12 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create project structure per implementation plan with backend/ directory
-- [ ] T002 Initialize Node.js/TypeScript project with package.json, tsconfig.json
-- [ ] T003 [P] Install dependencies: express, sequelize, socket.io, jsonwebtoken, bcryptjs
-- [ ] T004 [P] Configure ESLint and Prettier in backend/
-- [ ] T005 Create .env.example with DATABASE_URL, JWT_SECRET, PORT configuration
-- [ ] T006 Setup database configuration in backend/src/config/database.ts
+- [X] T001 Create project structure per implementation plan with backend/ directory
+- [X] T002 Initialize Node.js/TypeScript project with package.json, tsconfig.json
+- [X] T003 [P] Install dependencies: express, sequelize, socket.io, jsonwebtoken, bcryptjs
+- [X] T004 [P] Configure ESLint and Prettier in backend/
+- [X] T005 Create .env.example with DATABASE_URL, JWT_SECRET, PORT configuration
+- [X] T006 Setup database configuration in backend/src/config/database.ts
 
 ---
 
@@ -33,15 +33,15 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T007 Create User model in backend/src/models/User.ts with role enum (ADMIN, HEAD_JUDGE, MAT_JUDGE, SCOREKEEPER)
-- [ ] T008 [P] Create Club model in backend/src/models/Club.ts
-- [ ] T009 Setup JWT authentication middleware in backend/src/middleware/auth.ts
-- [ ] T010 [P] Implement role-based access control middleware in backend/src/middleware/rbac.ts
-- [ ] T011 [P] Create validation middleware in backend/src/middleware/validation.ts
-- [ ] T012 Implement auth service for login/token generation in backend/src/services/authService.ts
-- [ ] T013 Create auth routes in backend/src/routes/auth.routes.ts with POST /api/auth/login
-- [ ] T014 [P] Setup Socket.io server with namespace /live-matches in backend/src/config/socket.ts
-- [ ] T015 Create main app entry point in backend/src/app.ts with Express and Socket.io setup
+- [X] T007 Create User model in backend/src/models/User.ts with role enum (ADMIN, HEAD_JUDGE, MAT_JUDGE, SCOREKEEPER)
+- [X] T008 [P] Create Club model in backend/src/models/Club.ts
+- [X] T009 Setup JWT authentication middleware in backend/src/middleware/auth.ts
+- [X] T010 [P] Implement role-based access control middleware in backend/src/middleware/rbac.ts
+- [X] T011 [P] Create validation middleware in backend/src/middleware/validation.ts
+- [X] T012 Implement auth service for login/token generation in backend/src/services/authService.ts
+- [X] T013 Create auth routes in backend/src/routes/auth.routes.ts with POST /api/auth/login
+- [X] T014 [P] Setup Socket.io server with namespace /live-matches in backend/src/config/socket.ts
+- [X] T015 Create main app entry point in backend/src/app.ts with Express and Socket.io setup
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -55,13 +55,13 @@
 
 ### Implementation for User Story 1
 
-- [ ] T016 [P] [US1] Create Tournament model in backend/src/models/Tournament.ts with JSONB settings field
-- [ ] T017 [US1] Implement tournament service in backend/src/services/tournamentService.ts
-- [ ] T018 [US1] Create tournament routes in backend/src/routes/tournament.routes.ts
-- [ ] T019 [US1] Add POST /api/tournaments endpoint for tournament creation (ADMIN only)
-- [ ] T020 [US1] Add GET /api/tournaments/:id endpoint for tournament retrieval
-- [ ] T021 [US1] Implement tournament settings validation (weight classes, durations)
-- [ ] T022 [US1] Add GET /api/tournaments list endpoint with completion filter
+- [X] T016 [P] [US1] Create Tournament model in backend/src/models/Tournament.ts with JSONB settings field
+- [X] T017 [US1] Implement tournament service in backend/src/services/tournamentService.ts
+- [X] T018 [US1] Create tournament routes in backend/src/routes/tournament.routes.ts
+- [X] T019 [US1] Add POST /api/tournaments endpoint for tournament creation (ADMIN only)
+- [X] T020 [US1] Add GET /api/tournaments/:id endpoint for tournament retrieval
+- [X] T021 [US1] Implement tournament settings validation (weight classes, durations)
+- [X] T022 [US1] Add GET /api/tournaments list endpoint with completion filter
 
 **Checkpoint**: Tournament CRUD functional - Admin can create and configure tournaments
 
@@ -75,15 +75,15 @@
 
 ### Implementation for User Story 2
 
-- [ ] T023 [P] [US2] Create Player model in backend/src/models/Player.ts with computed age fields
-- [ ] T024 [US2] Implement age calculation utility in backend/src/utils/ageCalculator.ts
-- [ ] T025 [US2] Implement player service in backend/src/services/playerService.ts
-- [ ] T026 [US2] Create player routes in backend/src/routes/player.routes.ts
-- [ ] T027 [US2] Add POST /api/players endpoint for single player registration (ADMIN only)
-- [ ] T028 [US2] Implement weight class validation against tournament settings
-- [ ] T029 [US2] Add POST /api/players/bulk endpoint for bulk registration via JSON array
-- [ ] T030 [US2] Add GET /api/players?tournamentId=:id list endpoint with filters
-- [ ] T031 [US2] Create Club routes in backend/src/routes/club.routes.ts for club management
+- [X] T023 [P] [US2] Create Player model in backend/src/models/Player.ts with computed age fields
+- [X] T024 [US2] Implement age calculation utility in backend/src/utils/ageCalculator.ts
+- [X] T025 [US2] Implement player service in backend/src/services/playerService.ts
+- [X] T026 [US2] Create player routes in backend/src/routes/player.routes.ts
+- [X] T027 [US2] Add POST /api/players endpoint for single player registration (ADMIN only)
+- [X] T028 [US2] Implement weight class validation against tournament settings
+- [X] T029 [US2] Add POST /api/players/bulk endpoint for bulk registration via JSON array
+- [X] T030 [US2] Add GET /api/players?tournamentId=:id list endpoint with filters
+- [X] T031 [US2] Create Club routes in backend/src/routes/club.routes.ts for club management
 
 **Checkpoint**: Player registration functional with bulk import and weight validation
 
@@ -97,15 +97,15 @@
 
 ### Implementation for User Story 3
 
-- [ ] T032 [P] [US3] Create Match model in backend/src/models/Match.ts with status enum
-- [ ] T033 [P] [US3] Create MatchEvent model in backend/src/models/MatchEvent.ts for audit trail
-- [ ] T034 [US3] Implement rest period validator utility in backend/src/utils/restPeriodValidator.ts
-- [ ] T035 [US3] Implement matchmaking service in backend/src/services/matchmakingService.ts
-- [ ] T036 [US3] Implement club avoidance algorithm with 3-tier fallback logic
-- [ ] T037 [US3] Add POST /api/matches/generate endpoint for bracket generation (HEAD_JUDGE only)
-- [ ] T038 [US3] Implement intra-club warning flagging for unavoidable same-club matches
-- [ ] T039 [US3] Add rest period validation during match scheduling
-- [ ] T040 [US3] Add GET /api/matches/:id endpoint for match details
+- [X] T032 [P] [US3] Create Match model in backend/src/models/Match.ts with status enum
+- [X] T033 [P] [US3] Create MatchEvent model in backend/src/models/MatchEvent.ts for audit trail
+- [X] T034 [US3] Implement rest period validator utility in backend/src/utils/restPeriodValidator.ts
+- [X] T035 [US3] Implement matchmaking service in backend/src/services/matchmakingService.ts
+- [X] T036 [US3] Implement club avoidance algorithm with 3-tier fallback logic
+- [X] T037 [US3] Add POST /api/matches/generate endpoint for bracket generation (HEAD_JUDGE only)
+- [X] T038 [US3] Implement intra-club warning flagging for unavoidable same-club matches
+- [X] T039 [US3] Add rest period validation during match scheduling
+- [X] T040 [US3] Add GET /api/matches/:id endpoint for match details
 
 **Checkpoint**: Bracket generation functional with club avoidance and rest period enforcement
 
@@ -119,22 +119,22 @@
 
 ### Implementation for User Story 4
 
-- [ ] T041 [US4] Implement match service in backend/src/services/matchService.ts
-- [ ] T042 [US4] Implement match state machine with valid transitions
-- [ ] T043 [US4] Add POST /api/matches/:id/start endpoint (MAT_JUDGE only)
-- [ ] T044 [US4] Add POST /api/matches/:id/pause endpoint
-- [ ] T045 [US4] Add POST /api/matches/:id/resume endpoint
-- [ ] T046 [US4] Add POST /api/matches/:id/end endpoint with winner selection
-- [ ] T047 [US4] Implement scoring service in backend/src/services/scoringService.ts
-- [ ] T048 [US4] Implement scoring validation (match state, player in match, round validity)
-- [ ] T049 [US4] Implement point gap auto-end logic with MATCH:FINISHED_BY_POINT_GAP broadcast
-- [ ] T050 [US4] Create Socket.io scoring handler in backend/src/socket/handlers/scoring.handler.ts
-- [ ] T051 [US4] Implement MATCH:ADD_POINT WebSocket event handler
-- [ ] T052 [US4] Implement MATCH:REMOVE_POINT WebSocket event handler
-- [ ] T053 [US4] Implement MATCH:END_ROUND WebSocket event handler
-- [ ] T054 [US4] Implement match room management (join_match, leave_match)
-- [ ] T055 [US4] Implement Socket.io authentication middleware in backend/src/socket/middleware/socketAuth.ts
-- [ ] T056 [US4] Add POST /api/matches/:id/cancel endpoint with role-based rules
+- [X] T041 [US4] Implement match service in backend/src/services/matchService.ts
+- [X] T042 [US4] Implement match state machine with valid transitions
+- [X] T043 [US4] Add POST /api/matches/:id/start endpoint (MAT_JUDGE only)
+- [X] T044 [US4] Add POST /api/matches/:id/pause endpoint
+- [X] T045 [US4] Add POST /api/matches/:id/resume endpoint
+- [X] T046 [US4] Add POST /api/matches/:id/end endpoint with winner selection
+- [X] T047 [US4] Implement scoring service in backend/src/services/scoringService.ts
+- [X] T048 [US4] Implement scoring validation (match state, player in match, round validity)
+- [X] T049 [US4] Implement point gap auto-end logic with MATCH:FINISHED_BY_POINT_GAP broadcast
+- [X] T050 [US4] Create Socket.io scoring handler in backend/src/socket/handlers/scoring.handler.ts
+- [X] T051 [US4] Implement MATCH:ADD_POINT WebSocket event handler
+- [X] T052 [US4] Implement MATCH:REMOVE_POINT WebSocket event handler
+- [X] T053 [US4] Implement MATCH:END_ROUND WebSocket event handler
+- [X] T054 [US4] Implement match room management (join_match, leave_match)
+- [X] T055 [US4] Implement Socket.io authentication middleware in backend/src/socket/middleware/socketAuth.ts
+- [X] T056 [US4] Add POST /api/matches/:id/cancel endpoint with role-based rules
 
 **Checkpoint**: Live match execution functional with real-time scoring and state machine
 
@@ -148,12 +148,12 @@
 
 ### Implementation for User Story 5
 
-- [ ] T057 [US5] Implement match handler in backend/src/socket/handlers/match.handler.ts
-- [ ] T058 [US5] Implement JOIN_MATCH event for scorekeeper read-only access
-- [ ] T059 [US5] Implement MATCH:STATE_UPDATE broadcast on state changes
-- [ ] T060 [US5] Implement MATCH:SCORE_UPDATE broadcast on scoring events
-- [ ] T061 [US5] Add scheduled match listing endpoint for display boards
-- [ ] T062 [US5] Verify scorekeeper cannot emit scoring events (read-only enforcement)
+- [X] T057 [US5] Implement match handler in backend/src/socket/handlers/match.handler.ts
+- [X] T058 [US5] Implement JOIN_MATCH event for scorekeeper read-only access
+- [X] T059 [US5] Implement MATCH:STATE_UPDATE broadcast on state changes
+- [X] T060 [US5] Implement MATCH:SCORE_UPDATE broadcast on scoring events
+- [X] T061 [US5] Add scheduled match listing endpoint for display boards
+- [X] T062 [US5] Verify scorekeeper cannot emit scoring events (read-only enforcement)
 
 **Checkpoint**: Score monitoring functional with read-only access for scorekeepers
 
@@ -167,12 +167,12 @@
 
 ### Implementation for User Story 6
 
-- [ ] T063 [US6] Implement message queue for disconnected clients in backend/src/socket/handlers/match.handler.ts
-- [ ] T064 [US6] Implement MATCH:REQUEST_STATE event for explicit state requests
-- [ ] T065 [US6] Implement MATCH:TIMER_SYNC periodic broadcast every 10 seconds
-- [ ] T066 [US6] Add reconnection state sync logic in Socket.io connection handler
-- [ ] T067 [US6] Implement queue cleanup after 30-second timeout
-- [ ] T068 [US6] Add MATCH:REST_VIOLATION_WARNING event for scheduling conflicts
+- [X] T063 [US6] Implement message queue for disconnected clients in backend/src/socket/handlers/match.handler.ts
+- [X] T064 [US6] Implement MATCH:REQUEST_STATE event for explicit state requests
+- [X] T065 [US6] Implement MATCH:TIMER_SYNC periodic broadcast every 10 seconds
+- [X] T066 [US6] Add reconnection state sync logic in Socket.io connection handler
+- [X] T067 [US6] Implement queue cleanup after 30-second timeout
+- [X] T068 [US6] Add MATCH:REST_VIOLATION_WARNING event for scheduling conflicts
 
 **Checkpoint**: Reconnection sync functional with message queuing and state recovery
 
@@ -182,15 +182,15 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T069 [P] Add comprehensive error handling with structured error responses
-- [ ] T070 [P] Implement input validation across all endpoints
-- [ ] T071 [P] Add request logging and audit trail for API operations
-- [ ] T072 Implement tournament read-only enforcement after completion
-- [ ] T073 [P] Add database indexes for performance optimization
-- [ ] T074 Implement rate limiting for WebSocket events
-- [ ] T075 Add API documentation with OpenAPI/Swagger
-- [ ] T076 Run quickstart.md validation steps
-- [ ] T077 Final code review and cleanup
+- [X] T069 [P] Add comprehensive error handling with structured error responses
+- [X] T070 [P] Implement input validation across all endpoints
+- [X] T071 [P] Add request logging and audit trail for API operations
+- [X] T072 Implement tournament read-only enforcement after completion
+- [X] T073 [P] Add database indexes for performance optimization
+- [X] T074 Implement rate limiting for WebSocket events
+- [X] T075 Add API documentation with OpenAPI/Swagger
+- [X] T076 Run quickstart.md validation steps
+- [X] T077 Final code review and cleanup
 
 ---
 
