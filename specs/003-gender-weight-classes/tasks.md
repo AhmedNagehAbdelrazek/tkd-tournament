@@ -20,8 +20,8 @@
 
 **Purpose**: Update tournament validator to accept gender-keyed weight class structure
 
-- [ ] T001 Update tournament validator to accept gender-keyed weightClasses object in `utils/validators/tournamentValidator.js`
-- [ ] T002 [P] Add `updateSettingsValidation` chain in `utils/validators/tournamentValidator.js` for PUT /:id/settings endpoint (weightClasses object, name/min/max per entry)
+- [x] T001 Update tournament validator to accept gender-keyed weightClasses object in `utils/validators/tournamentValidator.js`
+- [x] T002 [P] Add `updateSettingsValidation` chain in `utils/validators/tournamentValidator.js` for PUT /:id/settings endpoint (weightClasses object, name/min/max per entry)
 
 ---
 
@@ -31,9 +31,9 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T003 Implement `findExcludedPlayers(tournamentId)` in `Services/tournamentService.js` — queries all players in tournament, evaluates each against gender-specific weight classes, returns array of excluded player objects with id, name, gender, weight, clubName, reason
-- [ ] T004 Implement `buildExclusionReason(player, tournament)` helper in `Services/tournamentService.js` — generates reason string: "No {GENDER} weight class matches {WEIGHT}kg — available ranges: {list}" or "No weight classes configured for {GENDER} division"
-- [ ] T005 Implement `hasInProgressMatches(tournamentId)` guard in `Services/tournamentService.js` — queries Match model for any match with status IN_PROGRESS in the tournament, returns boolean
+- [x] T003 Implement `findExcludedPlayers(tournamentId)` in `Services/tournamentService.js` — queries all players in tournament, evaluates each against gender-specific weight classes, returns array of excluded player objects with id, name, gender, weight, clubName, reason
+- [x] T004 Implement `buildExclusionReason(player, tournament)` helper in `Services/tournamentService.js` — generates reason string: "No {GENDER} weight class matches {WEIGHT}kg — available ranges: {list}" or "No weight classes configured for {GENDER} division"
+- [x] T005 Implement `hasInProgressMatches(tournamentId)` guard in `Services/tournamentService.js` — queries Match model for any match with status IN_PROGRESS in the tournament, returns boolean
 
 **Checkpoint**: Foundation ready — user story implementation can now begin
 
@@ -47,11 +47,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] Update `create(data)` in `Services/tournamentService.js` — after creating tournament, call `findExcludedPlayers`, return tournament with `excludedPlayers` array in response
-- [ ] T007 [US1] Update `updateSettings(id, settings)` in `Services/tournamentService.js` — add `hasInProgressMatches` guard before allowing update; after updating, call `findExcludedPlayers`, return tournament with `excludedPlayers` array
-- [ ] T008 [US1] Add `updateSettings` handler in `Controllers/tournamentController.js` — delegates to `tournamentService.updateSettings`, uses `successResponse`
-- [ ] T009 [US1] Add `PUT /:id/settings` route in `Routes/tournamentRoutes.js` — protect + adminGuard + updateSettingsValidation + validate + controller
-- [ ] T010 [US1] Update `create` handler in `Controllers/tournamentController.js` — return response shaped as `{ tournament, excludedPlayers }` instead of raw tournament
+- [x] T006 [US1] Update `create(data)` in `Services/tournamentService.js` — after creating tournament, call `findExcludedPlayers`, return tournament with `excludedPlayers` array in response
+- [x] T007 [US1] Update `updateSettings(id, settings)` in `Services/tournamentService.js` — add `hasInProgressMatches` guard before allowing update; after updating, call `findExcludedPlayers`, return tournament with `excludedPlayers` array
+- [x] T008 [US1] Add `updateSettings` handler in `Controllers/tournamentController.js` — delegates to `tournamentService.updateSettings`, uses `successResponse`
+- [x] T009 [US1] Add `PUT /:id/settings` route in `Routes/tournamentRoutes.js` — protect + adminGuard + updateSettingsValidation + validate + controller
+- [x] T010 [US1] Update `create` handler in `Controllers/tournamentController.js` — return response shaped as `{ tournament, excludedPlayers }` instead of raw tournament
 
 **Checkpoint**: Tournament create/update returns gender-keyed weight classes with excluded players. Settings lock works.
 
@@ -65,11 +65,11 @@
 
 ### Implementation for User Story 2
 
-- [ ] T011 [US2] Update `validateWeight(tournament, weight, gender)` in `Services/playerService.js` — accept `gender` parameter, look up `tournament.settings.weightClasses[gender]`, check weight against that array only; throw descriptive error with available ranges for the gender
-- [ ] T012 [US2] Update `create(data)` in `Services/playerService.js` — pass `data.gender` to `validateWeight`
-- [ ] T013 [US2] Update `bulkCreate(data)` in `Services/playerService.js` — pass each player's gender to `validateWeight`
-- [ ] T014 [US2] Update `list(query)` weight class filter in `Services/playerService.js` — when filtering by weightClass, resolve the class from `settings.weightClasses[query.gender]` instead of flat array
-- [ ] T015 [US2] Update `generateBracket(data)` in `Services/matchmakingService.js` — resolve weight class from `tournament.settings.weightClasses[data.gender]` instead of flat array
+- [x] T011 [US2] Update `validateWeight(tournament, weight, gender)` in `Services/playerService.js` — accept `gender` parameter, look up `tournament.settings.weightClasses[gender]`, check weight against that array only; throw descriptive error with available ranges for the gender
+- [x] T012 [US2] Update `create(data)` in `Services/playerService.js` — pass `data.gender` to `validateWeight`
+- [x] T013 [US2] Update `bulkCreate(data)` in `Services/playerService.js` — pass each player's gender to `validateWeight`
+- [x] T014 [US2] Update `list(query)` weight class filter in `Services/playerService.js` — when filtering by weightClass, resolve the class from `settings.weightClasses[query.gender]` instead of flat array
+- [x] T015 [US2] Update `generateBracket(data)` in `Services/matchmakingService.js` — resolve weight class from `tournament.settings.weightClasses[data.gender]` instead of flat array
 
 **Checkpoint**: Player registration and matchmaking respect gender-specific weight classes.
 
@@ -83,8 +83,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T016 [US3] Add `getExcludedPlayers` handler in `Controllers/tournamentController.js` — calls `tournamentService.findExcludedPlayers`, uses `successResponse`
-- [ ] T017 [US3] Add `GET /:id/excluded-players` route in `Routes/tournamentRoutes.js` — protect + controller
+- [x] T016 [US3] Add `getExcludedPlayers` handler in `Controllers/tournamentController.js` — calls `tournamentService.findExcludedPlayers`, uses `successResponse`
+- [x] T017 [US3] Add `GET /:id/excluded-players` route in `Routes/tournamentRoutes.js` — protect + controller
 
 **Checkpoint**: Excluded players can be queried independently via dedicated endpoint.
 
@@ -94,8 +94,8 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T018 [P] Update Postman collection in `postman/collection.json` — add PUT /:id/settings and GET /:id/excluded-players requests with examples
-- [ ] T019 Run quickstart.md validation — verify all examples in `specs/003-gender-weight-classes/quickstart.md` work against implementation
+- [x] T018 [P] Update Postman collection in `postman/collection.json` — add PUT /:id/settings and GET /:id/excluded-players requests with examples
+- [x] T019 Run quickstart.md validation — verify all examples in `specs/003-gender-weight-classes/quickstart.md` work against implementation
 
 ---
 

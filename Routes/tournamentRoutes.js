@@ -1,10 +1,9 @@
 const router = require('express').Router();
 const protect = require('../middlewares/protect');
 const { tkdRoleGuard } = require('../middlewares/protect');
-const roleGuard = require('../middlewares/roleGuard');
 const c = require('../Controllers/tournamentController');
 const validate = require('../middlewares/validatorMiddleware');
-const { createTournamentValidation } = require('../utils/validators/tournamentValidator');
+const { createTournamentValidation, updateSettingsValidation } = require('../utils/validators/tournamentValidator');
 
 function adminGuard(req, res, next) {
   const globalAdmin = ['admin', 'super_admin'].includes(req.user?.globalRole);
@@ -15,6 +14,8 @@ function adminGuard(req, res, next) {
 
 router.get('/', protect, c.list);
 router.get('/:id', protect, c.getById);
+router.get('/:id/excluded-players', protect, c.getExcludedPlayers);
 router.post('/', protect, adminGuard, createTournamentValidation, validate, c.create);
+router.put('/:id/settings', protect, adminGuard, updateSettingsValidation, validate, c.updateSettings);
 
 module.exports = router;

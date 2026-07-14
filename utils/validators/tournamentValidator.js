@@ -1,5 +1,40 @@
 const { body } = require('express-validator');
 
+const weightClassValidation = (prefix) => [
+  body(`${prefix}.name`)
+    .notEmpty()
+    .withMessage('weight class name is required')
+    .isString()
+    .withMessage('weight class name must be a string'),
+  body(`${prefix}.min`)
+    .notEmpty()
+    .withMessage('weight class min is required')
+    .isFloat({ min: 0 })
+    .withMessage('weight class min must be a non-negative number'),
+  body(`${prefix}.max`)
+    .notEmpty()
+    .withMessage('weight class max is required')
+    .isFloat({ min: 0 })
+    .withMessage('weight class max must be a non-negative number'),
+];
+
+const genderKeyedWeightClassValidation = [
+  body('settings.weightClasses')
+    .optional()
+    .isObject()
+    .withMessage('weightClasses must be an object with MALE and/or FEMALE keys'),
+  body('settings.weightClasses.MALE')
+    .optional()
+    .isArray()
+    .withMessage('MALE weight classes must be an array'),
+  ...weightClassValidation('settings.weightClasses.MALE.*'),
+  body('settings.weightClasses.FEMALE')
+    .optional()
+    .isArray()
+    .withMessage('FEMALE weight classes must be an array'),
+  ...weightClassValidation('settings.weightClasses.FEMALE.*'),
+];
+
 const createTournamentValidation = [
   body('name')
     .notEmpty()
@@ -20,22 +55,7 @@ const createTournamentValidation = [
     .optional()
     .isObject()
     .withMessage('settings must be an object'),
-  body('settings.weightClasses')
-    .optional()
-    .isArray()
-    .withMessage('weightClasses must be an array'),
-  body('settings.weightClasses.*.name')
-    .optional()
-    .isString()
-    .withMessage('weight class name must be a string'),
-  body('settings.weightClasses.*.min')
-    .optional()
-    .isNumeric()
-    .withMessage('weight class min must be a number'),
-  body('settings.weightClasses.*.max')
-    .optional()
-    .isNumeric()
-    .withMessage('weight class max must be a number'),
+  ...genderKeyedWeightClassValidation,
   body('settings.pointGapAutoEnd')
     .optional()
     .isInt({ min: 1 })
@@ -54,4 +74,22 @@ const createTournamentValidation = [
     .withMessage('restBetweenRoundsSec must be a non-negative integer'),
 ];
 
-module.exports = { createTournamentValidation };
+const updateSettingsValidation = [
+  body('weightClasses')
+    .notEmpty()
+    .withMessage('weightClasses is required')
+    .isObject()
+    .withMessage('weightClasses must be an object with MALE and/or FEMALE keys'),
+  body('weightClasses.MALE')
+    .optional()
+    .isArray()
+    .withMessage('MALE weight classes must be an array'),
+  ...weightClassValidation('weightClasses.MALE.*'),
+  body('weightClasses.FEMALE')
+    .optional()
+    .isArray()
+    .withMessage('FEMALE weight classes must be an array'),
+  ...weightClassValidation('weightClasses.FEMALE.*'),
+];
+
+module.exports = { createTournamentValidation, updateSettingsValidation };

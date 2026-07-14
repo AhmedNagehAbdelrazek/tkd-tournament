@@ -16,12 +16,18 @@ function yearOfBirth(dob) {
   return new Date(dob).getFullYear();
 }
 
-function validateWeight(tournament, weight) {
-  const classes = tournament.settings?.weightClasses || [];
-  const match = classes.find((wc) => weight >= wc.min && weight <= wc.max);
-  if (!match) {
+function validateWeight(tournament, weight, gender) {
+  const genderClasses = tournament.settings?.weightClasses?.[gender] || [];
+  if (genderClasses.length === 0) {
     throw ApiErrors.validation(
-      `Weight ${weight}kg does not fall within any configured weight class`
+      `No weight classes configured for ${gender} division`
+    );
+  }
+  const match = genderClasses.find((wc) => weight >= wc.min && weight <= wc.max);
+  if (!match) {
+    const rangeList = genderClasses.map((wc) => wc.name).join(', ');
+    throw ApiErrors.validation(
+      `Weight ${weight}kg does not fall within any ${gender} weight class. Available ranges: ${rangeList}`
     );
   }
   return match;
@@ -41,7 +47,7 @@ async function create(data) {
     throw ApiErrors.notFound('Club not found');
   }
 
-  validateWeight(tournament, data.weight);
+  validateWeight(tournament, data.weight, data.gender);
 
   const player = await Player.create({
     name: data.name,
@@ -81,7 +87,7 @@ async function bulkCreate(data) {
   for (let i = 0; i < data.players.length; i++) {
     const p = data.players[i];
     try {
-      validateWeight(tournament, p.weight);
+      validateWeight(tournament, p.weight, p.gender);
       const club = await Club.findByPk(p.clubId);
       if (!club) {
         results.errors.push({ index: i, reason: 'Club not found' });
@@ -109,12 +115,11 @@ async function list(query = {}) {
   if (query.tournamentId) where.tournamentId = query.tournamentId;
   if (query.gender) where.gender = query.gender;
   if (query.clubId) where.clubId = query.clubId;
-  if (query.weightClass) {
+  if (query.weightClass && query.tournamentId) {
     const tournament = await Tournament.findByPk(query.tournamentId);
     if (tournament) {
-      const wc = (tournament.settings?.weightClasses || []).find(
-        (c) => c.name === query.weightClass
-      );
+      const genderClasses = tournament.settings?.weightClasses?.[query.gender] || [];
+      const wc = genderClasses.find((c) => c.name === query.weightClass);
       if (wc) {
         where.weight = { [require('sequelize').Op.between]: [wc.min, wc.max] };
       }

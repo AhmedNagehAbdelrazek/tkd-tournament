@@ -1,5 +1,52 @@
-const { Tournament, Match } = require('../Models');
+const { Tournament, Match, Player, Club } = require('../Models');
 const { ApiErrors } = require('../utils/ApiError');
+const { Op } = require('sequelize');
+
+function buildExclusionReason(player, tournament) {
+  const genderClasses = tournament.settings?.weightClasses?.[player.gender] || [];
+  if (genderClasses.length === 0) {
+    return `No weight classes configured for ${player.gender} division`;
+  }
+  const rangeList = genderClasses.map((wc) => wc.name).join(', ');
+  return `No ${player.gender} weight class matches ${parseFloat(player.weight)}kg — available ranges: ${rangeList}`;
+}
+
+async function findExcludedPlayers(tournamentId) {
+  const tournament = await Tournament.findByPk(tournamentId);
+  if (!tournament) {
+    throw ApiErrors.notFound('Tournament not found');
+  }
+
+  const players = await Player.findAll({
+    where: { tournamentId },
+    include: [{ model: Club, attributes: ['name'] }],
+  });
+
+  const excluded = [];
+  for (const player of players) {
+    const genderClasses = tournament.settings?.weightClasses?.[player.gender] || [];
+    const weight = parseFloat(player.weight);
+    const matches = genderClasses.some((wc) => weight >= wc.min && weight <= wc.max);
+    if (!matches) {
+      excluded.push({
+        id: player.id,
+        name: player.name,
+        gender: player.gender,
+        weight,
+        clubName: player.Club?.name || null,
+        reason: buildExclusionReason(player, tournament),
+      });
+    }
+  }
+  return excluded;
+}
+
+async function hasInProgressMatches(tournamentId) {
+  const count = await Match.count({
+    where: { tournamentId, status: 'IN_PROGRESS' },
+  });
+  return count > 0;
+}
 
 async function create(data) {
   const tournament = await Tournament.create({
@@ -8,7 +55,12 @@ async function create(data) {
     endDate: data.endDate,
     settings: data.settings,
   });
-  return tournament;
+
+  const excludedPlayers = await findExcludedPlayers(tournament.id);
+  return {
+    ...tournament.toJSON(),
+    excludedPlayers,
+  };
 }
 
 async function getById(id) {
@@ -42,8 +94,16 @@ async function updateSettings(id, settings) {
   if (tournament.isCompleted) {
     throw ApiErrors.badRequest('Cannot modify a completed tournament');
   }
+  if (await hasInProgressMatches(id)) {
+    throw ApiErrors.conflict('Cannot update weight classes while matches are in progress');
+  }
   await tournament.update({ settings });
-  return tournament;
+
+  const excludedPlayers = await findExcludedPlayers(id);
+  return {
+    ...tournament.toJSON(),
+    excludedPlayers,
+  };
 }
 
 async function markComplete(id) {
@@ -55,4 +115,13 @@ async function markComplete(id) {
   return tournament;
 }
 
-module.exports = { create, getById, list, updateSettings, markComplete };
+module.exports = {
+  create,
+  getById,
+  list,
+  updateSettings,
+  markComplete,
+  findExcludedPlayers,
+  buildExclusionReason,
+  hasInProgressMatches,
+};

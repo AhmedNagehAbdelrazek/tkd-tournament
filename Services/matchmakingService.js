@@ -67,11 +67,10 @@ async function generateBracket(data) {
     throw ApiErrors.notFound('Tournament not found');
   }
 
-  const weightClass = (tournament.settings?.weightClasses || []).find(
-    (wc) => wc.name === data.weightClass
-  );
+  const genderClasses = tournament.settings?.weightClasses?.[data.gender] || [];
+  const weightClass = genderClasses.find((wc) => wc.name === data.weightClass);
   if (!weightClass) {
-    throw ApiErrors.badRequest(`Weight class "${data.weightClass}" not found in tournament settings`);
+    throw ApiErrors.badRequest(`Weight class "${data.weightClass}" not found in ${data.gender} division`);
   }
 
   const players = await Player.findAll({

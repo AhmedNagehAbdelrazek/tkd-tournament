@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "TKD Tournament API",
-    "description": "Postman collection for the Taekwondo Match Management System\n\nBase URL: {{base_url}}\nAuth: Bearer token via {{auth_token}}\n\nEndpoints:\n- Health: GET /api/healthz\n- Auth: POST /api/auth/tkd/login, POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me, PATCH /api/auth/me\n- Clubs: GET/POST /api/clubs\n- Tournaments: GET/POST /api/tournaments, GET /api/tournaments/:id\n- Players: GET/POST /api/players, POST /api/players/bulk\n- Matches: POST /api/matches/generate, GET /api/matches/:id\n- Match State: POST /api/matches/:id/start|pause|resume|end|cancel\n- HTTP Fallback Scoring: POST /api/matches/:id/points, POST /api/matches/:id/remove-points, POST /api/matches/:id/end-round",
+    "description": "Postman collection for the Taekwondo Match Management System\n\nBase URL: {{base_url}}\nAuth: Bearer token via {{auth_token}}\n\nEndpoints:\n- Health: GET /api/healthz\n- Auth: POST /api/auth/tkd/login, POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me, PATCH /api/auth/me\n- Clubs: GET/POST /api/clubs\n- Tournaments: GET/POST /api/tournaments, GET /api/tournaments/:id, PUT /api/tournaments/:id/settings, GET /api/tournaments/:id/excluded-players\n- Players: GET/POST /api/players, POST /api/players/bulk\n- Matches: POST /api/matches/generate, GET /api/matches/:id\n- Match State: POST /api/matches/:id/start|pause|resume|end|cancel\n- HTTP Fallback Scoring: POST /api/matches/:id/points, POST /api/matches/:id/remove-points, POST /api/matches/:id/end-round",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -242,7 +242,9 @@
               "script": {
                 "exec": [
                   "var jsonData = pm.response.json();",
-                  "if (jsonData.id) {",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "  pm.collectionVariables.set('tournament_id', jsonData.data.id);",
+                  "} else if (jsonData.id) {",
                   "  pm.collectionVariables.set('tournament_id', jsonData.id);",
                   "}"
                 ],
@@ -255,7 +257,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Summer Championship 2026\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-03\",\n  \"settings\": {\n    \"roundDurationSec\": 120,\n    \"restBetweenRoundsSec\": 60,\n    \"restBetweenMatchesMin\": 15,\n    \"pointGapAutoEnd\": 20,\n    \"weightClasses\": [\n      { \"name\": \"10-15kg\", \"min\": 10, \"max\": 15 },\n      { \"name\": \"15-20kg\", \"min\": 15, \"max\": 20 }\n    ]\n  }\n}"
+              "raw": "{\n  \"name\": \"Summer Championship 2026\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-03\",\n  \"settings\": {\n    \"roundDurationSec\": 120,\n    \"restBetweenRoundsSec\": 60,\n    \"restBetweenMatchesMin\": 15,\n    \"pointGapAutoEnd\": 20,\n    \"weightClasses\": {\n      \"MALE\": [\n        { \"name\": \"Male -58kg\", \"min\": 0, \"max\": 58 },\n        { \"name\": \"Male -68kg\", \"min\": 58.01, \"max\": 68 }\n      ],\n      \"FEMALE\": [\n        { \"name\": \"Female -49kg\", \"min\": 0, \"max\": 49 },\n        { \"name\": \"Female -57kg\", \"min\": 49.01, \"max\": 57 }\n      ]\n    }\n  }\n}"
             },
             "url": {
               "raw": "{{base_url}}/tournaments",
@@ -268,7 +270,7 @@
               "name": "Tournament Created",
               "status": "Created",
               "code": 201,
-              "body": "{\n  \"id\": 1,\n  \"name\": \"Summer Championship 2026\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-03\",\n  \"settings\": {\n    \"roundDurationSec\": 120,\n    \"restBetweenRoundsSec\": 60,\n    \"restBetweenMatchesMin\": 15,\n    \"pointGapAutoEnd\": 20,\n    \"weightClasses\": [\n      { \"name\": \"10-15kg\", \"min\": 10, \"max\": 15 },\n      { \"name\": \"15-20kg\", \"min\": 15, \"max\": 20 }\n    ]\n  },\n  \"createdAt\": \"2026-07-13T12:00:00.000Z\"\n}"
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Summer Championship 2026\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-03\",\n  \"settings\": {\n    \"weightClasses\": {\n      \"MALE\": [\n        { \"name\": \"Male -58kg\", \"min\": 0, \"max\": 58 },\n        { \"name\": \"Male -68kg\", \"min\": 58.01, \"max\": 68 }\n      ],\n      \"FEMALE\": [\n        { \"name\": \"Female -49kg\", \"min\": 0, \"max\": 49 },\n        { \"name\": \"Female -57kg\", \"min\": 49.01, \"max\": 57 }\n      ]\n    },\n    \"pointGapAutoEnd\": 20\n  },\n  \"isCompleted\": false,\n  \"excludedPlayers\": []\n}"
             }
           ]
         },
@@ -307,6 +309,49 @@
               "status": "OK",
               "code": 200,
               "body": "{\n  \"tournaments\": [...],\n  \"total\": 1\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Tournament Settings",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weightClasses\": {\n    \"MALE\": [\n      { \"name\": \"Male -58kg\", \"min\": 0, \"max\": 58 },\n      { \"name\": \"Male -74kg\", \"min\": 58.01, \"max\": 74 }\n    ],\n    \"FEMALE\": [\n      { \"name\": \"Female -49kg\", \"min\": 0, \"max\": 49 }\n    ]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}/settings",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments", "{{tournament_id}}", "settings"]
+            }
+          },
+          "response": [
+            {
+              "name": "Settings Updated",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Summer Championship 2026\",\n    \"settings\": {\n      \"weightClasses\": {\n        \"MALE\": [\n          { \"name\": \"Male -58kg\", \"min\": 0, \"max\": 58 },\n          { \"name\": \"Male -74kg\", \"min\": 58.01, \"max\": 74 }\n        ],\n        \"FEMALE\": [\n          { \"name\": \"Female -49kg\", \"min\": 0, \"max\": 49 }\n        ]\n      }\n    },\n    \"excludedPlayers\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Excluded Players",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}/excluded-players",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments", "{{tournament_id}}", "excluded-players"]
+            }
+          },
+          "response": [
+            {
+              "name": "Excluded Players List",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": {\n    \"excludedPlayers\": [\n      {\n        \"id\": 5,\n        \"name\": \"Ahmed Ali\",\n        \"gender\": \"MALE\",\n        \"weight\": 85,\n        \"clubName\": \"Cairo Tigers\",\n        \"reason\": \"No MALE weight class matches 85kg — available ranges: Male -58kg, Male -68kg\"\n      }\n    ],\n    \"total\": 1\n  }\n}"
             }
           ]
         }
@@ -411,7 +456,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tournamentId\": {{tournament_id}},\n  \"weightClass\": \"10-15kg\",\n  \"gender\": \"MALE\",\n  \"matchType\": \"SINGLE_ELIMINATION\"\n}"
+              "raw": "{\n  \"tournamentId\": {{tournament_id}},\n  \"weightClass\": \"Male -58kg\",\n  \"gender\": \"MALE\",\n  \"matchType\": \"SINGLE_ELIMINATION\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/matches/generate",
