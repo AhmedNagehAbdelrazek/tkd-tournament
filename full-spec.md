@@ -1,207 +1,223 @@
-Here is the complete, master **Specification Document**, explicitly divided into phases. This is designed to be saved as a single file (e.g., `SPECIFICATION.md` or `docs/master-spec.md`) in your repository. It is structured to be directly consumed by `spec-kit` workflows to drive your development step-by-step.
-
----
-
 # 🥋 Taekwondo Match Management System: Master Specification
 
-**Version:** 1.0.0  
+**Version:** 2.0.0  
 **Status:** Approved for Implementation  
 **Tech Stack:** Node.js, PostgreSQL, Sequelize, Socket.io, Cloudinary, JWT  
 
 ---
 
-## 📌 PHASE 1: Product & Business Requirements
+## 1. System Overview & Core Business Rules
 
-### 1.1 System Overview
-A real-time backend system to manage Taekwondo tournaments, player rankings, algorithmic matchmaking, and live match execution. The backend acts as the **Single Source of Truth (SSOT)**, enforcing strict business rules and broadcasting real-time state to judges and display boards via WebSockets.
+### 1.1 Purpose
+A real-time backend system for managing Taekwondo tournaments. It handles player registration, algorithmic matchmaking (with club avoidance and rest periods), live match execution via WebSockets (with REST fallbacks), and automatic bracket progression for single-elimination tournaments. The backend is the **Single Source of Truth (SSOT)**.
 
-### 1.2 User Roles & Permissions (RBAC)
-| Role | Permissions |
-| :--- | :--- |
-| **Admin** | Full system access. Manage tournaments, global settings, clubs, players, and override any match state. |
-| **Head Judge** | Generate brackets, approve/override matchmaking, finalize match results, manage tournament settings. |
-| **Mat Judge** | Control live match state (Start, Pause, Resume, End Round, End Match). Add/Remove points. |
-| **Scorekeeper** | Read-only access to live scores, match schedules, and player info (for display boards). |
+### 1.2 User Roles (RBAC)
+- **Admin**: Full system access, manage global settings, clubs, and users.
+- **Head Judge**: Manage tournaments, generate/finalize brackets, override seeding/byes, finalize match results.
+- **Mat Judge**: Control live match state, add/remove points, end rounds/matches.
+- **Scorekeeper**: Read-only access for display boards.
 
-### 1.3 Core Business Rules
-1. **Player Data**: Must store full Date of Birth (DOB). The API must calculate and return `age` and `yearOfBirth` dynamically. Photos are stored as Cloudinary URLs.
-2. **Weight Classes**: Defined as ranges (e.g., `10-15kg`, `15-20kg`). Configurable per tournament. Players are only matched within their registered weight class.
-3. **Gender Separation**: Male and Female players are strictly matched in separate brackets.
-4. **Match Types**: Every match must have exactly one type: `SINGLE_ELIMINATION`, `ROUND_ROBIN`, or `FRIENDLY`.
-5. **Rest Period Rule**: A player cannot be scheduled for a new match until **15 minutes** have passed since the `endTime` of their previous match.
-6. **Round Format**: Default to standard WT rules (3 rounds, 2 mins/round, 1 min rest between rounds), but all durations are configurable in Tournament Settings.
-7. **Point Gap Auto-End**: If the score difference between two players reaches the configurable `pointGapAutoEnd` threshold (e.g., 20 points), the backend must immediately halt scoring, end the match, and broadcast the auto-end event.
+### 1.3 Match & Tournament Rules
+- **Match Types**: `SINGLE_ELIMINATION`, `ROUND_ROBIN`, `FRIENDLY`. (Focus is on standalone execution; no hybrid pool-to-knockout flows).
+- **Weight & Gender**: Strict separation. Players only match within their configured weight class and gender.
+- **Rest Period**: Minimum **15-minute gap** between a player's `endTime` of their last match and the `scheduledTime` of their next match.
+- **Round Format**: Configurable (Default: 3 rounds, 2 mins/round, 1 min rest).
+- **Point Gap Auto-End**: Configurable. If score difference reaches the threshold, backend auto-ends match.
 
-### 1.4 Matchmaking Algorithm: Club Avoidance Logic
-The bracket generation engine must apply this exact fallback hierarchy:
-1. **Primary Rule**: Never match two players from the same club.
-2. **Secondary Fallback**: If mathematically impossible to avoid (e.g., only 2 players remain in a weight class and they share a club), generate the match but set `intraClubWarning: true` in the response payload.
-3. **Tertiary Relaxation**: If a single club represents **>50%** of the total players in a specific weight class/gender bracket, the club avoidance rule is automatically disabled for that specific bracket to allow the tournament to proceed.
+### 1.4 Match End Reasons (Mandatory)
+When a match concludes, the Mat Judge/Head Judge **must** provide an `endReason`. 
+Allowed Enum Values: `TIME_EXPIRED`, `POINT_GAP`, `WALKOVER`, `INJURY_WITHDRAWAL`, `DISQUALIFICATION`, `REFEREE_STOPPAGE`, `GOLDEN_POINT`, `BYE`.
 
----
-
-## 📌 PHASE 2: System Architecture & Tech Stack
-
-### 2.1 Technology Choices
-- **Runtime**: Node.js (v18+)
-- **Database**: PostgreSQL
-- **ORM**: Sequelize (with strict typing/validation)
-- **Real-time**: Socket.io (Mandatory for live match module)
-- **Authentication**: JWT (JSON Web Tokens) with role-guard middleware
-- **Media Storage**: Cloudinary (Backend stores only the secure URL string)
-
-### 2.2 Architectural Patterns
-- **Single Source of Truth (SSOT)**: The PostgreSQL database is the absolute authority. If a judge's tablet disconnects and reconnects, the client must request the current match state from the backend, not rely on local memory.
-- **State Machine**: Matches strictly follow: `SCHEDULED` → `IN_PROGRESS` → `PAUSED` ↔ `IN_PROGRESS` → `FINISHED` | `CANCELLED`.
-- **Event-Driven Validation**: All scoring actions are intercepted by the backend, validated against rules (e.g., point gap, match status), saved to the audit log, and *then* broadcasted.
-
-### 2.3 Real-Time Topology (Socket.io)
-- **Namespace**: `/live-matches`
-- **Room Strategy**: Each match has a dedicated room (e.g., `match_<matchId>`). Clients (judges, scorekeepers) join this room. 
-- **Sync Event**: Upon joining a room, the server immediately emits a `MATCH:STATE_UPDATE` to synchronize the client.
+### 1.5 Bracket Progression & Club Avoidance
+- **Club Avoidance**: 
+  1. Never match same-club players. 
+  2. Fallback: If mathematically impossible (e.g., last 2 players), allow but flag `intraClubWarning: true`. 
+  3. Relaxation: If one club has >50% of the bracket, disable the rule for that bracket.
+- **Progression**: Winners automatically advance to the `nextMatchId` in the designated `nextMatchSlot`.
 
 ---
 
-## 📌 PHASE 3: Data Model Specification (Sequelize)
+## 2. Database Schema (Sequelize)
 
-### 3.1 `User`
-- `id`: UUID, Primary Key
-- `name`: STRING
-- `email`: STRING, Unique, Indexed
-- `passwordHash`: STRING
+### 2.1 `User`
+- `id`: UUID, PK
+- `name`, `email` (Unique), `passwordHash`: STRING
 - `role`: ENUM('ADMIN', 'HEAD_JUDGE', 'MAT_JUDGE', 'SCOREKEEPER')
 
-### 3.2 `Club`
-- `id`: UUID, Primary Key
-- `name`: STRING, Unique, Indexed
+### 2.2 `Club`
+- `id`: UUID, PK
+- `name`: STRING, Unique
 
-### 3.3 `Tournament`
-- `id`: UUID, Primary Key
+### 2.3 `Tournament`
+- `id`: UUID, PK
 - `name`: STRING
-- `startDate`: DATE
-- `endDate`: DATE
+- `startDate`, `endDate`: DATE
 - `settings`: JSONB 
-  - *Schema*: `{ "roundsCount": 3, "roundDurationSec": 120, "restBetweenRoundsSec": 60, "restBetweenMatchesMin": 15, "pointGapAutoEnd": 20, "weightClasses": [{"name": "10-15kg", "min": 10, "max": 15}] }`
+  - *Schema*: `{ "roundsCount": 3, "roundDurationSec": 120, "restBetweenRoundsSec": 60, "restBetweenMatchesMin": 15, "pointGapAutoEnd": 20, "weightClasses": [{"name": "10-15kg", "min": 10, "max": 15}], "seedingEnabled": true }`
 
-### 3.4 `Player`
-- `id`: UUID, Primary Key *(This is the "Player ID" exit requirement)*
+### 2.4 `Player`
+- `id`: UUID, PK *(The "Player ID" exit requirement)*
 - `name`: STRING
-- `dob`: DATE *(Full date stored; age/year calculated on read)*
+- `dob`: DATE *(Full date; age/year calculated on read)*
 - `weight`: DECIMAL(5,2)
 - `gender`: ENUM('MALE', 'FEMALE')
-- `clubId`: UUID, ForeignKey → `Club.id`
-- `tournamentId`: UUID, ForeignKey → `Tournament.id`
+- `clubId`: UUID, FK → `Club`
+- `tournamentId`: UUID, FK → `Tournament`
 - `photoUrl`: STRING *(Cloudinary URL)*
+- `seed`: INTEGER, Nullable *(Tournament-specific ranking for bracket generation)*
 
-### 3.5 `Match`
-- `id`: UUID, Primary Key
-- `tournamentId`: UUID, ForeignKey → `Tournament.id`
+### 2.5 `Match` (Flat Tree Structure)
+*Every slot in the bracket, including byes, is represented as a Match record to maintain a perfectly uniform tree.*
+- `id`: UUID, PK
+- `tournamentId`: UUID, FK → `Tournament`
 - `type`: ENUM('SINGLE_ELIMINATION', 'ROUND_ROBIN', 'FRIENDLY')
-- `player1Id`: UUID, ForeignKey → `Player.id`
-- `player2Id`: UUID, ForeignKey → `Player.id`
-- `scheduledTime`: TIMESTAMP
+- `weightClass`: STRING (e.g., "10-15kg")
+- `gender`: ENUM('MALE', 'FEMALE')
+- `player1Id`: UUID, FK → `Player`, Nullable
+- `player2Id`: UUID, FK → `Player`, Nullable
+- `scheduledTime`: TIMESTAMP, Nullable
 - `endTime`: TIMESTAMP, Nullable
-- `status`: ENUM('SCHEDULED', 'IN_PROGRESS', 'PAUSED', 'FINISHED', 'CANCELLED')
-- `winnerId`: UUID, ForeignKey → `Player.id`, Nullable
+- `status`: ENUM('DRAFT', 'SCHEDULED', 'IN_PROGRESS', 'PAUSED', 'FINISHED', 'CANCELLED')
+- `winnerId`: UUID, FK → `Player`, Nullable
+- `endReason`: ENUM('TIME_EXPIRED', 'POINT_GAP', 'WALKOVER', 'INJURY_WITHDRAWAL', 'DISQUALIFICATION', 'REFEREE_STOPPAGE', 'GOLDEN_POINT', 'BYE', null)
 - `currentRound`: INTEGER, Default: 1
 - `player1Score`: INTEGER, Default: 0
 - `player2Score`: INTEGER, Default: 0
 - `intraClubWarning`: BOOLEAN, Default: false
+- **Bracket Linking Fields:**
+  - `nextMatchId`: UUID, FK → `Match`, Nullable *(Points to the next match in the tree)*
+  - `nextMatchSlot`: ENUM('PLAYER1', 'PLAYER2', null) *(Which slot the winner fills in the next match)*
+  - `stageName`: STRING *(e.g., "Round of 16", "Quarterfinal", "Semifinal", "Final")*
+  - `bracketPosition`: INTEGER *(Used for sorting and tree reconstruction)*
 
-### 3.6 `MatchEvent` *(Audit Trail)*
-- `id`: UUID, Primary Key
-- `matchId`: UUID, ForeignKey → `Match.id`
+### 2.6 `MatchEvent` (Audit Trail)
+- `id`: UUID, PK
+- `matchId`: UUID, FK → `Match`
 - `type`: ENUM('START', 'PAUSE', 'RESUME', 'END_ROUND', 'ADD_POINT', 'REMOVE_POINT', 'AUTO_END_BY_GAP', 'MANUAL_END')
-- `playerId`: UUID, ForeignKey → `Player.id`, Nullable
+- `playerId`: UUID, FK → `Player`, Nullable
 - `points`: INTEGER, Nullable
 - `roundNumber`: INTEGER
-- `timestamp`: TIMESTAMP, Default: NOW()
+- `timestamp`: TIMESTAMP
 
 ---
 
-## 📌 PHASE 4: API & WebSocket Contracts
+## 3. Matchmaking & Bracket Progression Engine
 
-### 4.1 REST API Endpoints
-| Method | Endpoint | Description | Auth Required |
+### 3.1 Bracket Generation Algorithm (Single Elimination)
+Triggered via `POST /api/matches/generate`.
+1. **Filter**: Get all players for the specific `weightClass` and `gender`.
+2. **Calculate Bracket Size**: Find the next power of 2 (e.g., 10 players → 16-player bracket).
+3. **Calculate Byes**: `Bracket Size - Number of Players = Number of Byes`.
+4. **Seeding/Sorting**: 
+   - If `settings.seedingEnabled` is true, sort players by `Player.seed` ascending.
+   - If false, shuffle players randomly.
+5. **Assign Byes**: The top `N` seeded players receive a "Bye". 
+   - *Implementation*: Create a `Match` record for the bye where `player1Id` = Real Player, `player2Id` = null, `status` = `FINISHED`, `endReason` = `BYE`, `winnerId` = Real Player.
+6. **Generate Matches**: Create the remaining matches for Round 1.
+7. **Link Tree**: Assign `nextMatchId` and `nextMatchSlot` to link Round 1 matches to Round 2, Round 2 to Quarterfinals, etc.
+8. **Stage Naming**: Automatically assign `stageName` based on the total number of rounds (e.g., if 4 rounds total, Round 1 is "Round of 16", Round 2 is "Quarterfinal").
+9. **Status**: All generated matches start as `DRAFT`.
+
+### 3.2 Head Judge Override & Finalization
+- Matches remain in `DRAFT` status until finalized.
+- Head Judge can update `Player.seed` or manually swap players in `DRAFT` matches.
+- `POST /api/matches/finalize`: Transitions all `DRAFT` matches to `SCHEDULED`, locks the bracket, and applies the **Club Avoidance Fallback** logic. If intra-club matches are forced, `intraClubWarning` is set to `true`.
+
+### 3.3 Automatic Progression
+When a match transitions to `FINISHED`:
+1. The backend identifies the `winnerId`.
+2. If `nextMatchId` exists, the backend updates the next match:
+   - If `nextMatchSlot` == 'PLAYER1', set `nextMatch.player1Id` = `winnerId`.
+   - If `nextMatchSlot` == 'PLAYER2', set `nextMatch.player2Id` = `winnerId`.
+3. The backend broadcasts `BRACKET:UPDATED` via WebSocket.
+
+---
+
+## 4. API & WebSocket Contracts (Unified with REST Fallbacks)
+
+*Rule: Every WebSocket action has a direct REST fallback for clients that cannot maintain a socket connection. The REST endpoint performs the exact same backend logic and broadcasts the WebSocket event to other connected clients.*
+
+### 4.1 Tournament & Player Management
+| Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/login` | Authenticate and receive JWT. | No |
-| `POST` | `/api/tournaments` | Create tournament with initial settings. | Admin, Head Judge |
-| `GET` | `/api/tournaments/:id` | Get tournament details and settings. | All Authenticated |
-| `POST` | `/api/players` | Create player (validates weight class). | Admin, Head Judge |
-| `GET` | `/api/players` | List players (returns calculated `age` and `yearOfBirth`). | All Authenticated |
-| `POST` | `/api/matches/generate` | Trigger bracket generation. Applies club avoidance & rest rules. | Head Judge, Admin |
-| `POST` | `/api/matches/:id/start` | Transition `SCHEDULED` → `IN_PROGRESS`. | Mat Judge, Head Judge |
-| `POST` | `/api/matches/:id/pause` | Transition `IN_PROGRESS` → `PAUSED`. | Mat Judge, Head Judge |
-| `POST` | `/api/matches/:id/resume` | Transition `PAUSED` → `IN_PROGRESS`. | Mat Judge, Head Judge |
-| `POST` | `/api/matches/:id/end` | Transition to `FINISHED`, set `winnerId`. | Head Judge |
+| `POST` | `/api/auth/login` | Authenticate, return JWT. | Public |
+| `POST` | `/api/tournaments` | Create tournament with settings. | Admin |
+| `GET` | `/api/tournaments/:id` | Get tournament details. | All |
+| `POST` | `/api/players` | Create player. | Admin, Head Judge |
+| `GET` | `/api/players` | List players (includes calculated `age`, `yearOfBirth`). | All |
 
-### 4.2 WebSocket Events (Socket.io)
-**Client → Server (Actions)**
-- `MATCH:ADD_POINT` → Payload: `{ matchId, playerId, points, roundNumber }`
-- `MATCH:REMOVE_POINT` → Payload: `{ matchId, playerId, points, roundNumber }`
-- `MATCH:END_ROUND` → Payload: `{ matchId }`
+### 4.2 Matchmaking & Bracket Tree
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/matches/generate` | Generate draft bracket (calculates byes, links tree). | Head Judge |
+| `POST` | `/api/matches/finalize` | Lock bracket, apply club avoidance, set to SCHEDULED. | Head Judge |
+| `GET` | `/api/tournaments/:id/bracket` | **Returns Nested JSON Tree** for a specific weight/gender. Includes current stage. | All |
 
-**Server → Client (Broadcasts & Validation)**
-- `MATCH:STATE_UPDATE` → Payload: Full current match object. *(Emitted on state change AND on client reconnection to room)*.
-- `MATCH:SCORE_UPDATE` → Payload: `{ matchId, player1Score, player2Score, roundNumber }`
-- `MATCH:FINISHED_BY_POINT_GAP` → Payload: `{ matchId, winnerId, reason: "POINT_GAP_REACHED" }` *(Triggered automatically by backend validation)*.
-- `MATCH:REST_VIOLATION_WARNING` → Payload: `{ matchId, playerId, requiredRestMin: 15 }` *(Emitted if scheduling violates the 15-min rule)*.
+### 4.3 Live Match Execution & Scoring (Socket + REST Fallback)
 
----
+| Action | WebSocket Event (Client ↔ Server) | REST Fallback Endpoint | Payload / Body |
+| :--- | :--- | :--- | :--- |
+| **Start Match** | `MATCH:START` | `POST /api/matches/:id/start` | `{ matchId }` |
+| **Pause Match** | `MATCH:PAUSE` | `POST /api/matches/:id/pause` | `{ matchId }` |
+| **Resume Match** | `MATCH:RESUME` | `POST /api/matches/:id/resume` | `{ matchId }` |
+| **Add Point** | `MATCH:ADD_POINT` | `POST /api/matches/:id/points` | `{ matchId, playerId, points, roundNumber, action: 'ADD' }` |
+| **Remove Point**| `MATCH:REMOVE_POINT`| `POST /api/matches/:id/points` | `{ matchId, playerId, points, roundNumber, action: 'REMOVE' }` |
+| **End Round** | `MATCH:END_ROUND` | `POST /api/matches/:id/rounds/end` | `{ matchId }` |
+| **End Match** | `MATCH:END` | `POST /api/matches/:id/end` | `{ matchId, winnerId, endReason }` *(endReason is mandatory)* |
 
-## 📌 PHASE 5: Implementation Roadmap
-
-### Milestone 1: Foundation & Authentication
-- [ ] Initialize Node.js project with TypeScript, ESLint, Prettier.
-- [ ] Configure PostgreSQL connection and Sequelize ORM.
-- [ ] Implement `User` and `Club` models and seed initial roles.
-- [ ] Build JWT Authentication middleware and Role-Based Access Control (RBAC) guards.
-
-### Milestone 2: Tournament & Player Management
-- [ ] Implement `Tournament` and `Player` models.
-- [ ] Build CRUD APIs for Players and Tournaments.
-- [ ] Implement helper functions to calculate `age` and `yearOfBirth` from `dob` on API responses.
-- [ ] Integrate Cloudinary URL validation for `photoUrl`.
-
-### Milestone 3: Matchmaking Engine
-- [ ] Implement the bracket generation algorithm (`POST /api/matches/generate`).
-- [ ] Code the **Club Avoidance Fallback Logic** (Primary, Secondary, Tertiary rules).
-- [ ] Implement the **15-minute Rest Period Tracker** validation (query `Match` table for `playerId` where `endTime` is within the last 15 mins).
-- [ ] Write unit tests specifically for the matchmaking edge cases.
-
-### Milestone 4: Live Match Execution & WebSockets
-- [ ] Setup Socket.io server with namespace `/live-matches` and room management.
-- [ ] Implement Match State Machine transitions in REST controllers.
-- [ ] Build WebSocket handlers for `MATCH:ADD_POINT`, `MATCH:REMOVE_POINT`, `MATCH:END_ROUND`.
-- [ ] Implement backend validation: Check `pointGapAutoEnd` after every score change. If triggered, auto-update match status and emit `MATCH:FINISHED_BY_POINT_GAP`.
-
-### Milestone 5: State Sync, Testing & Polish
-- [ ] Implement "State Synchronization": When a client joins `match_<id>` room, immediately fetch and emit the latest `Match` and `MatchEvent` data.
-- [ ] Write integration tests for WebSocket scoring flows.
-- [ ] Generate Swagger/OpenAPI documentation for all REST endpoints.
-- [ ] Final security review (ensure Mat Judges cannot access Admin routes, validate all UUIDs).
+### 4.4 Server Broadcasts (WebSocket Only)
+*These are emitted by the server to all clients in the `match_<id>` or `tournament_<id>` room. No REST fallback needed as they are notifications.*
+- `MATCH:STATE_UPDATE`: Full match state (emitted on connection/reconnection).
+- `MATCH:SCORE_UPDATE`: `{ matchId, player1Score, player2Score, roundNumber }`
+- `MATCH:FINISHED_BY_POINT_GAP`: `{ matchId, winnerId, reason: 'POINT_GAP' }`
+- `BRACKET:UPDATED`: `{ tournamentId, weightClass, gender }` (Triggers frontend to refetch the bracket tree).
+- `MATCH:REST_VIOLATION_WARNING`: `{ matchId, playerId, requiredRestMin: 15 }`
 
 ---
 
-## 📌 PHASE 6: Testing & Validation Strategy
+## 5. Bracket Tree Service (Flat to Nested Transformation)
 
-1. **Unit Testing**: 
-   - Test the Club Avoidance algorithm with mock arrays of players (e.g., 60% Club A, 40% Club B).
-   - Test the age/year calculation utility function.
-2. **Integration Testing**:
-   - Test the `/api/matches/generate` endpoint to ensure it rejects scheduling if the 15-minute rest rule is violated.
-   - Test the WebSocket flow: Connect client → Emit `ADD_POINT` → Verify DB update → Verify `SCORE_UPDATE` broadcast.
-3. **Edge Case Validation**:
-   - What happens if a Mat Judge sends `ADD_POINT` for a match that is already `FINISHED`? (Backend must reject with `400 Bad Request`).
-   - What happens if the point gap exactly equals the `pointGapAutoEnd` setting? (Backend must trigger auto-end immediately).
+The database stores the bracket flatly for performance and relational integrity. The `BracketService` transforms this into a nested structure for the frontend.
+
+### 5.1 Transformation Logic
+1. Fetch all `Match` records for the requested `tournamentId`, `weightClass`, and `gender`.
+2. Sort matches by `bracketPosition` or `stageName`.
+3. Build a hash map of matches by `id`.
+4. Iterate through matches. If a match has a `nextMatchId`, attach the current match object as a child to the `nextMatch`'s `player1Matches` or `player2Matches` array.
+5. Identify the root node (The `Final` match, which has `nextMatchId = null`).
+
+### 5.2 Nested JSON Response Structure
+```json
+{
+  "tournamentId": "uuid",
+  "weightClass": "10-15kg",
+  "gender": "MALE",
+  "currentStage": "Quarterfinal",
+  "bracket": {
+    "id": "final-match-uuid",
+    "stageName": "Final",
+    "status": "SCHEDULED",
+    "player1": { "id": "uuid", "name": "Player A" },
+    "player2": { "id": "uuid", "name": "Player B" },
+    "player1Source": {
+      "id": "semi1-uuid",
+      "stageName": "Semifinal 1",
+      "status": "FINISHED",
+      "winnerId": "uuid",
+      "player1Source": { "id": "qf1-uuid", "stageName": "Quarterfinal 1", "status": "FINISHED", "winnerId": "uuid" },
+      "player2Source": { "id": "qf2-uuid", "stageName": "Quarterfinal 2", "status": "FINISHED", "winnerId": "uuid" }
+    },
+    "player2Source": { ... }
+  }
+}
+```
 
 ---
 
-### 💡 How to use this with `spec-kit`
+## 6. Implementation Guidelines & Edge Cases
 
-1. Save this entire document as `SPECIFICATION.md` in the root of your repository.
-2. When using `spec-kit`, you can now reference specific phases. For example, you can prompt your AI coding assistant with:
-   - *"Read `SPECIFICATION.md`. Let's start with **Phase 5, Milestone 1**. Generate the Sequelize models for User and Club, and the JWT auth middleware."*
-   - *"Read `SPECIFICATION.md`, Phase 4. Generate the Socket.io event handlers for `MATCH:ADD_POINT` including the point gap auto-end validation."*
-
-Would you like me to generate the actual **Phase 5, Milestone 1** code (Project setup, Sequelize models, and JWT Auth) to get you started right now?
+1. **State Synchronization**: When a client connects to Socket.io room `match_<id>`, the server *must* immediately emit `MATCH:STATE_UPDATE` with the current DB state. Do not rely on client-side state.
+2. **Walkovers & Injuries**: If a player cannot fight, the Mat Judge uses the REST/WebSocket `MATCH:END` endpoint with `endReason: 'WALKOVER'` or `'INJURY_WITHDRAWAL'`. The backend automatically sets the `winnerId` to the opposing player and triggers the **Automatic Progression** logic to feed them into the `nextMatchId`.
+3. **Bye Progression**: Because "Byes" are created as `FINISHED` matches with `endReason: 'BYE'` during the generation phase, the **Automatic Progression** logic handles them identically to normal matches. The player automatically appears in the Round 2 slot without manual intervention.
+4. **Validation**: The backend must reject any `MATCH:ADD_POINT` or `MATCH:END` requests if the match status is not `IN_PROGRESS` (for scoring) or `IN_PROGRESS`/`PAUSED` (for ending).
+5. **Rest Period Enforcement**: The `POST /api/matches/generate` and manual scheduling endpoints must query the `Match` table to ensure no player is scheduled within 15 minutes of their previous `endTime`. If violated, return a `400 Bad Request` with the `MATCH:REST_VIOLATION_WARNING` payload.
