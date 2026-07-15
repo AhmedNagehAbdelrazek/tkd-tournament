@@ -1,11 +1,8 @@
+// ponytail: one role set — TKD roles live here too
 const ROLES = {
   SUPER_ADMIN: 'super_admin',
   ADMIN: 'admin',
   CUSTOMER: 'customer',
-};
-
-const TKD_ROLES = {
-  ADMIN: 'ADMIN',
   HEAD_JUDGE: 'HEAD_JUDGE',
   MAT_JUDGE: 'MAT_JUDGE',
   SCOREKEEPER: 'SCOREKEEPER',
@@ -99,7 +96,6 @@ const PAGINATION = {
 
 module.exports = {
   ROLES,
-  TKD_ROLES,
   MATCH_STATUS,
   MATCH_EVENT_TYPES,
   MATCH_TYPES,

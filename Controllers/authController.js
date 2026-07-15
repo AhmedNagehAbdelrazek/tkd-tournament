@@ -1,6 +1,6 @@
 const authService = require('../Services/authService');
 const { successResponse } = require('../utils/httpResponse');
-const { signupValidation, loginValidation, updateProfileValidation } = require('../utils/validators/authValidator');
+const { signupValidation, updateProfileValidation } = require('../utils/validators/authValidator');
 const validate = require('../middlewares/validatorMiddleware');
 
 const signup = [
@@ -16,18 +16,15 @@ const signup = [
   },
 ];
 
-const login = [
-  ...loginValidation,
-  validate,
-  async (req, res, next) => {
-    try {
-      const result = await authService.login(req.body);
-      successResponse(res, result);
-    } catch (err) {
-      next(err);
-    }
-  },
-];
+// ponytail: validation in routes, not here
+const login = async (req, res, next) => {
+  try {
+    const result = await authService.login(req.body);
+    successResponse(res, result);
+  } catch (err) {
+    next(err);
+  }
+};
 
 const me = async (req, res, next) => {
   try {

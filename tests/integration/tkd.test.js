@@ -25,8 +25,8 @@ let clubId, tournamentId, playerId, matchId;
 
 describe('Auth', () => {
   // ponytail: smoke test only — real auth requires DB. Contract shape test.
-  it('POST /api/auth/tkd/login — returns 401 for bad credentials', async () => {
-    const res = await agent.post('/api/auth/tkd/login').send({ email: 'x@x', password: 'x' });
+  it('POST /api/auth/login — returns 401 for bad credentials', async () => {
+    const res = await agent.post('/api/auth/login').send({ email: 'x@x', password: 'x' });
     expect([401, 422, 500]).toContain(res.status); // 422 if validation fails, 500 if DB unavailable
   });
 });

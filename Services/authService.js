@@ -53,8 +53,9 @@ async function login({ email, password }) {
     throw ApiErrors.unauthorized('Invalid email or password');
   }
 
+  // ponytail: one JWT with both roles — null tkdRole for global users
   const token = jwt.sign(
-    { id: user.id, email: user.email, globalRole: user.role },
+    { id: user.id, email: user.email, globalRole: user.role},
     JWT_SECRET,
     { expiresIn: JWT_EXPIRY }
   );
@@ -68,6 +69,7 @@ async function login({ email, password }) {
       email: user.email,
       name: user.name,
       role: user.role,
+      tkdRole: user.tkdRole || null,
     },
   };
 }

@@ -1,7 +1,6 @@
 const { Server } = require('socket.io');
 const socketAuth = require('./socket/middleware/socketAuth');
 const { registerScoringHandlers } = require('./socket/handlers/scoringHandler');
-const { TKD_ROLES } = require('./config/constants');
 
 function createSocketServer(httpServer) {
   const io = new Server(httpServer, {
