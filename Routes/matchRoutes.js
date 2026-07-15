@@ -1,18 +1,23 @@
 const router = require('express').Router();
 const protect = require('../middlewares/protect');
 const { tkdProtect, tkdRoleGuard } = require('../middlewares/protect');
+const adminGuard = require('../middlewares/adminGuard');
 const c = require('../Controllers/matchController');
 const rateLimiter = require('../middlewares/rateLimiter');
 const validate = require('../middlewares/validatorMiddleware');
-const { addPointValidation, removePointValidation, endRoundValidation, generateMatchValidation, endMatchValidation } = require('../utils/validators/matchValidator');
+const { addPointValidation, removePointValidation, endRoundValidation, generateMatchValidation, endMatchValidation, scheduleMatchValidation, rescheduleMatchValidation, walkoverValidation } = require('../utils/validators/matchValidator');
 
+router.get('/', protect, c.list);
 router.post('/generate', protect, tkdRoleGuard('HEAD_JUDGE'), generateMatchValidation, validate, c.generate);
+router.post('/schedule', protect, adminGuard, scheduleMatchValidation, validate, c.schedule);
 router.get('/:id', protect, rateLimiter(10), c.getById);
 router.post('/:id/start', protect, tkdRoleGuard('MAT_JUDGE'), c.start);
 router.post('/:id/pause', protect, tkdRoleGuard('MAT_JUDGE'), c.pause);
 router.post('/:id/resume', protect, tkdRoleGuard('MAT_JUDGE'), c.resume);
 router.post('/:id/end', protect, tkdRoleGuard('MAT_JUDGE'), endMatchValidation, validate, c.endMatch);
 router.post('/:id/cancel', protect, c.cancel);
+router.put('/:id/reschedule', protect, adminGuard, rescheduleMatchValidation, validate, c.reschedule);
+router.post('/:id/walkover', protect, adminGuard, walkoverValidation, validate, c.walkover);
 
 router.post('/:id/points', protect, tkdRoleGuard('MAT_JUDGE'), rateLimiter(2), addPointValidation, validate, c.addPoint);
 router.post('/:id/remove-points', protect, tkdRoleGuard('MAT_JUDGE'), rateLimiter(2), removePointValidation, validate, c.removePoint);

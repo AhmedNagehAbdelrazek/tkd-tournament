@@ -6,7 +6,7 @@ const app = createApp();
 const agent = request.agent(app);
 
 function adminHeaders() {
-  return { ...authHeader(tkdToken({ tkdRole: 'ADMIN' })), 'Content-Type': 'application/json' };
+  return { ...authHeader(tkdToken({ globalRole: 'admin', tkdRole: 'ADMIN' })), 'Content-Type': 'application/json' };
 }
 function headJudgeHeaders() {
   return { ...authHeader(tkdToken({ tkdRole: 'HEAD_JUDGE' })), 'Content-Type': 'application/json' };
@@ -129,12 +129,12 @@ describe('Bracket Integration Tests', () => {
       expect(res.status).toBe(403);
     });
 
-    it('returns 400 when matchId missing', async () => {
+    it('returns 422 when matchId missing', async () => {
       const res = await agent.post(`/api/tournaments/${tournamentId}/bracket/override`)
         .set(headJudgeHeaders())
         .send({ playerId: playerId1 });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(422);
     });
   });
 });

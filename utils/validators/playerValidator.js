@@ -1,4 +1,4 @@
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 
 const createPlayerValidation = [
   body('name')
@@ -73,4 +73,19 @@ const bulkCreatePlayerValidation = [
     .withMessage('clubId must be a positive integer'),
 ];
 
-module.exports = { createPlayerValidation, bulkCreatePlayerValidation };
+const updatePlayerValidation = [
+  param('id').isInt({ min: 1 }).withMessage('Player ID must be a positive integer'),
+  body('name').optional().isString().withMessage('name must be a string'),
+  body('dob').optional().isISO8601().withMessage('dob must be a valid date'),
+  body('weight').optional().isFloat({ min: 0 }).withMessage('weight must be a positive number'),
+  body('gender').optional().isIn(['MALE', 'FEMALE']).withMessage('gender must be MALE or FEMALE'),
+  body('clubId').optional().isInt({ min: 1 }).withMessage('clubId must be a positive integer'),
+  body('seed').optional().isInt({ min: 1 }).withMessage('seed must be a positive integer'),
+  body('photoUrl').optional().isURL().withMessage('photoUrl must be a valid URL'),
+];
+
+const deletePlayerValidation = [
+  param('id').isInt({ min: 1 }).withMessage('Player ID must be a positive integer'),
+];
+
+module.exports = { createPlayerValidation, bulkCreatePlayerValidation, updatePlayerValidation, deletePlayerValidation };

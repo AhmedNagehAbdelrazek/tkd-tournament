@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "TKD Tournament API",
-    "description": "Postman collection for the Taekwondo Match Management System\n\nBase URL: {{base_url}}\nAuth: Bearer token via {{auth_token}}\n\nEndpoints:\n- Health: GET /api/healthz\n- Auth: POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me, PATCH /api/auth/me\n- Clubs: GET/POST /api/clubs\n- Tournaments: GET/POST /api/tournaments, GET /api/tournaments/:id, PUT /api/tournaments/:id/settings, GET /api/tournaments/:id/excluded-players\n- Players: GET/POST /api/players, POST /api/players/bulk\n- Matches: POST /api/matches/generate, GET /api/matches/:id\n- Match State: POST /api/matches/:id/start|pause|resume|end|cancel\n- HTTP Fallback Scoring: POST /api/matches/:id/points, POST /api/matches/:id/remove-points, POST /api/matches/:id/end-round\n- Bracket: GET /api/tournaments/:id/bracket, POST /api/tournaments/:id/bracket/override",
+    "description": "Postman collection for the Taekwondo Match Management System\n\nBase URL: {{base_url}}\nAuth: Bearer token via {{auth_token}}\n\nEndpoints:\n- Health: GET /api/healthz\n- Auth: POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me, PATCH /api/auth/me\n- Clubs: GET/POST /api/clubs, GET/PUT/DELETE /api/clubs/:id\n- Tournaments: GET/POST /api/tournaments, GET/PUT/DELETE /api/tournaments/:id, PUT /api/tournaments/:id/settings, POST /api/tournaments/:id/complete, GET /api/tournaments/:id/excluded-players\n- Players: GET/POST /api/players, POST /api/players/bulk, GET/PUT/DELETE /api/players/:id\n- Matches: GET/POST /api/matches, POST /api/matches/generate, POST /api/matches/schedule, PUT /api/matches/:id/reschedule, POST /api/matches/:id/walkover, GET /api/matches/:id\n- Match State: POST /api/matches/:id/start|pause|resume|end|cancel\n- HTTP Fallback Scoring: POST /api/matches/:id/points, POST /api/matches/:id/remove-points, POST /api/matches/:id/end-round\n- Bracket: GET /api/tournaments/:id/bracket, POST /api/tournaments/:id/bracket/override\n- Dashboard: GET /api/dashboard/tournaments, GET /api/dashboard/tournaments/:id/overview\n- User Admin: GET /api/admin/users, PUT /api/admin/users/:id/role, PUT /api/admin/users/:id/deactivate, PUT /api/admin/users/:id/reactivate",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -940,6 +940,350 @@
               "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"status\": \"IN_PROGRESS\",\n    \"currentRound\": 2\n  }\n}"
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "Player Management",
+      "item": [
+        {
+          "name": "List Players (Paginated)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/players?tournamentId=1&page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["players"],
+              "query": [
+                { "key": "tournamentId", "value": "1" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Player by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["players", "{{player_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Player",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weight\": 75.5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["players", "{{player_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Player",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/players/{{player_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["players", "{{player_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Club Management",
+      "item": [
+        {
+          "name": "List Clubs (Paginated)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/clubs?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["clubs"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Club by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/clubs/{{club_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["clubs", "{{club_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Club",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Club Name\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/clubs/{{club_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["clubs", "{{club_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Club",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/clubs/{{club_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["clubs", "{{club_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tournament Management",
+      "item": [
+        {
+          "name": "List Tournaments (Paginated)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/tournaments?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tournament by ID (with stats)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments", "{{tournament_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Tournament",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Tournament Name\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments", "{{tournament_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Mark Tournament Complete",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}/complete",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments", "{{tournament_id}}", "complete"]
+            }
+          }
+        },
+        {
+          "name": "Delete Tournament",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments", "{{tournament_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Match Management",
+      "item": [
+        {
+          "name": "List Matches (Paginated)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/matches?tournamentId=1&page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["matches"],
+              "query": [
+                { "key": "tournamentId", "value": "1" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Schedule Match",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tournamentId\": 1,\n  \"player1Id\": 1,\n  \"player2Id\": 2,\n  \"scheduledTime\": \"2026-07-15T10:00:00Z\",\n  \"type\": \"FRIENDLY\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/matches/schedule",
+              "host": ["{{base_url}}"],
+              "path": ["matches", "schedule"]
+            }
+          }
+        },
+        {
+          "name": "Reschedule Match",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scheduledTime\": \"2026-07-15T11:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/matches/{{match_id}}/reschedule",
+              "host": ["{{base_url}}"],
+              "path": ["matches", "{{match_id}}", "reschedule"]
+            }
+          }
+        },
+        {
+          "name": "Walkover",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"winnerId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/matches/{{match_id}}/walkover",
+              "host": ["{{base_url}}"],
+              "path": ["matches", "{{match_id}}", "walkover"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Tournament List (Dashboard)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/dashboard/tournaments?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "tournaments"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tournament Overview (Dashboard)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/dashboard/tournaments/{{tournament_id}}/overview",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "tournaments", "{{tournament_id}}", "overview"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Administration",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/users?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Assign TKD Role",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tkdRole\": \"MAT_JUDGE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{user_id}}/role",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users", "{{user_id}}", "role"]
+            }
+          }
+        },
+        {
+          "name": "Deactivate User",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{user_id}}/deactivate",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users", "{{user_id}}", "deactivate"]
+            }
+          }
+        },
+        {
+          "name": "Reactivate User",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{user_id}}/reactivate",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users", "{{user_id}}", "reactivate"]
+            }
+          }
         }
       ]
     }

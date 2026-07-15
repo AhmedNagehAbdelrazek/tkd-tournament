@@ -72,6 +72,29 @@ const ADMIN_RESOURCES = [
 
 const ADMIN_ACTIONS = ['create', 'read', 'update', 'delete'];
 
+const AUDIT_ACTIONS = {
+  CREATE: 'CREATE',
+  UPDATE: 'UPDATE',
+  DELETE: 'DELETE',
+  ASSIGN_ROLE: 'ASSIGN_ROLE',
+  REVOKE_ROLE: 'REVOKE_ROLE',
+  DEACTIVATE: 'DEACTIVATE',
+  REACTIVATE: 'REACTIVATE',
+  MARK_COMPLETE: 'MARK_COMPLETE',
+  SCHEDULE_MATCH: 'SCHEDULE_MATCH',
+  RESCHEDULE_MATCH: 'RESCHEDULE_MATCH',
+  CANCEL_MATCH: 'CANCEL_MATCH',
+  WALKOVER: 'WALKOVER',
+};
+
+const AUDIT_ENTITY_TYPES = {
+  PLAYER: 'player',
+  CLUB: 'club',
+  TOURNAMENT: 'tournament',
+  USER: 'user',
+  MATCH: 'match',
+};
+
 const ORDER_STATUS = {
   PENDING: 'pending',
   CONFIRMED: 'confirmed',
@@ -106,4 +129,6 @@ module.exports = {
   PAGINATION,
   ADMIN_RESOURCES,
   ADMIN_ACTIONS,
+  AUDIT_ACTIONS,
+  AUDIT_ENTITY_TYPES,
 };

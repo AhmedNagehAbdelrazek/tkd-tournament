@@ -1,4 +1,4 @@
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 
 const weightClassValidation = (prefix) => [
   body(`${prefix}.name`)
@@ -92,4 +92,31 @@ const updateSettingsValidation = [
   ...weightClassValidation('weightClasses.FEMALE.*'),
 ];
 
-module.exports = { createTournamentValidation, updateSettingsValidation };
+const updateTournamentValidation = [
+  param('id').isInt({ min: 1 }).withMessage('Tournament ID must be a positive integer'),
+  body('name')
+    .optional()
+    .isString()
+    .withMessage('Tournament name must be a string')
+    .trim()
+    .isLength({ min: 2, max: 200 })
+    .withMessage('Tournament name must be between 2 and 200 characters'),
+  body('startDate')
+    .optional()
+    .isISO8601()
+    .withMessage('startDate must be a valid date'),
+  body('endDate')
+    .optional()
+    .isISO8601()
+    .withMessage('endDate must be a valid date'),
+];
+
+const markCompleteValidation = [
+  param('id').isInt({ min: 1 }).withMessage('Tournament ID must be a positive integer'),
+];
+
+const deleteTournamentValidation = [
+  param('id').isInt({ min: 1 }).withMessage('Tournament ID must be a positive integer'),
+];
+
+module.exports = { createTournamentValidation, updateSettingsValidation, updateTournamentValidation, markCompleteValidation, deleteTournamentValidation };

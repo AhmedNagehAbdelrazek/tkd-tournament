@@ -25,13 +25,13 @@
 
 **Purpose**: AuditLog entity, shared admin guard, and pagination wiring — blocking prerequisites for ALL user stories
 
-- [ ] T001 [P] Create AuditLog Sequelize model in Models/AuditLog.js per data-model.md (INTEGER PK, action ENUM, entityType, entityId, metadata JSONB, createdAt, no timestamps)
-- [ ] T002 [P] Create audit_logs table migration SQL in a new migration file under config/migrations/ or document manual SQL execution per data-model.md
-- [ ] T003 Add AuditLog associations to Models/index.js (User.hasMany AuditLog, AuditLog.belongsTo User as 'actor')
-- [ ] T004 Replace auditService stub in Services/auditService.js with real implementation that writes AuditLog records (non-blocking: catch errors, log to console only)
-- [ ] T005 [P] Extract adminGuard from Routes/tournamentRoutes.js into shared middleware in middlewares/adminGuard.js (global admin role check only per clarification Q1)
-- [ ] T006 [P] Add ADMIN_ACTIONS and ADMIN_RESOURCES constants to config/constants.js for audit log action values
-- [ ] T007 Update Routes/tournamentRoutes.js to import shared adminGuard from middlewares/adminGuard.js instead of inline definition
+- [x] T001 [P] Create AuditLog Sequelize model in Models/AuditLog.js per data-model.md (INTEGER PK, action ENUM, entityType, entityId, metadata JSONB, createdAt, no timestamps)
+- [x] T002 [P] Create audit_logs table migration SQL in a new migration file under config/migrations/ or document manual SQL execution per data-model.md
+- [x] T003 Add AuditLog associations to Models/index.js (User.hasMany AuditLog, AuditLog.belongsTo User as 'actor')
+- [x] T004 Replace auditService stub in Services/auditService.js with real implementation that writes AuditLog records (non-blocking: catch errors, log to console only)
+- [x] T005 [P] Extract adminGuard from Routes/tournamentRoutes.js into shared middleware in middlewares/adminGuard.js (global admin role check only per clarification Q1)
+- [x] T006 [P] Add ADMIN_ACTIONS and ADMIN_RESOURCES constants to config/constants.js for audit log action values
+- [x] T007 Update Routes/tournamentRoutes.js to import shared adminGuard from middlewares/adminGuard.js instead of inline definition
 
 **Checkpoint**: AuditLog model exists, auditService writes real records, shared adminGuard available. User story implementation can begin.
 
@@ -45,16 +45,16 @@
 
 ### Implementation for User Story 1
 
-- [ ] T008 Add getById method to Services/playerService.js (return player with computed age and club name)
-- [ ] T009 [P] Add updatePlayerValidation to utils/validators/playerValidator.js (validate name, dob, weight, gender, clubId, seed, photoUrl — all optional)
-- [ ] T010 [P] Add deletePlayerValidation to utils/validators/playerValidator.js (validate id param is integer)
-- [ ] T011 Add update method to Services/playerService.js (validate tournament exists and not completed, club exists if changing club, weight within tournament range; write AuditLog UPDATE)
-- [ ] T012 Add delete method to Services/playerService.js (check no SCHEDULED/IN_PROGRESS matches exist; write AuditLog DELETE; throw 409 CONFLICT if active matches)
-- [ ] T013 Add list method to Services/playerService.js with pagination (use parsePagination from utils/pagination.js, filter by tournamentId/gender/clubId/weightClass, include Club name)
-- [ ] T014 Update existing bulkCreate method in Services/playerService.js to write AuditLog CREATE for each created player
-- [ ] T015 [P] Add getById, update, delete, list controller methods to Controllers/playerController.js (delegate to service, use successResponse/paginatedResponse)
-- [ ] T016 [P] Add GET /:id, PUT /:id, DELETE /:id, GET / (paginated) routes to Routes/playerRoutes.js (protect + adminGuard for mutations, protect for reads)
-- [ ] T017 Update existing playerController.create and playerController.bulkCreate to write AuditLog via auditService
+- [x] T008 Add getById method to Services/playerService.js (return player with computed age and club name)
+- [x] T009 [P] Add updatePlayerValidation to utils/validators/playerValidator.js (validate name, dob, weight, gender, clubId, seed, photoUrl — all optional)
+- [x] T010 [P] Add deletePlayerValidation to utils/validators/playerValidator.js (validate id param is integer)
+- [x] T011 Add update method to Services/playerService.js (validate tournament exists and not completed, club exists if changing club, weight within tournament range; write AuditLog UPDATE)
+- [x] T012 Add delete method to Services/playerService.js (check no SCHEDULED/IN_PROGRESS matches exist; write AuditLog DELETE; throw 409 CONFLICT if active matches)
+- [x] T013 Add list method to Services/playerService.js with pagination (use parsePagination from utils/pagination.js, filter by tournamentId/gender/clubId/weightClass, include Club name)
+- [x] T014 Update existing bulkCreate method in Services/playerService.js to write AuditLog CREATE for each created player
+- [x] T015 [P] Add getById, update, delete, list controller methods to Controllers/playerController.js (delegate to service, use successResponse/paginatedResponse)
+- [x] T016 [P] Add GET /:id, PUT /:id, DELETE /:id, GET / (paginated) routes to Routes/playerRoutes.js (protect + adminGuard for mutations, protect for reads)
+- [x] T017 Update existing playerController.create and playerController.bulkCreate to write AuditLog via auditService
 
 **Checkpoint**: Player CRUD fully functional with audit logging. Can GET/UPDATE/DELETE/LIST players independently.
 
@@ -68,14 +68,14 @@
 
 ### Implementation for User Story 2
 
-- [ ] T018 Add getById method to Services/clubService.js (return club with playerCount via include/count)
-- [ ] T019 [P] Add updateClubValidation to utils/validators/clubValidator.js (validate name is string, required)
-- [ ] T020 [P] Add deleteClubValidation to utils/validators/clubValidator.js (validate id param is integer)
-- [ ] T021 Add update method to Services/clubService.js (enforce unique name via findOrCreate pattern; write AuditLog UPDATE)
-- [ ] T022 Add delete method to Services/clubService.js (check no players assigned; write AuditLog DELETE; throw 409 CONFLICT if players exist)
-- [ ] T023 Add list method to Services/clubService.js with pagination (use parsePagination, optional search by name, include playerCount)
-- [ ] T024 [P] Add getById, update, delete, list controller methods to Controllers/clubController.js
-- [ ] T025 [P] Add GET /:id, PUT /:id, DELETE /:id, GET / (paginated) routes to Routes/clubRoutes.js
+- [x] T018 Add getById method to Services/clubService.js (return club with playerCount via include/count)
+- [x] T019 [P] Add updateClubValidation to utils/validators/clubValidator.js (validate name is string, required)
+- [x] T020 [P] Add deleteClubValidation to utils/validators/clubValidator.js (validate id param is integer)
+- [x] T021 Add update method to Services/clubService.js (enforce unique name via findOrCreate pattern; write AuditLog UPDATE)
+- [x] T022 Add delete method to Services/clubService.js (check no players assigned; write AuditLog DELETE; throw 409 CONFLICT if players exist)
+- [x] T023 Add list method to Services/clubService.js with pagination (use parsePagination, optional search by name, include playerCount)
+- [x] T024 [P] Add getById, update, delete, list controller methods to Controllers/clubController.js
+- [x] T025 [P] Add GET /:id, PUT /:id, DELETE /:id, GET / (paginated) routes to Routes/clubRoutes.js
 
 **Checkpoint**: Club CRUD fully functional with audit logging. Can GET/UPDATE/DELETE/LIST clubs independently.
 
@@ -89,16 +89,16 @@
 
 ### Implementation for User Story 3
 
-- [ ] T026 Add getById method to Services/tournamentService.js with summary stats (playerCount, matchCount, matchesByStatus aggregation)
-- [ ] T027 [P] Add updateTournamentValidation to utils/validators/tournamentValidator.js (validate name, startDate, endDate — all optional)
-- [ ] T028 [P] Add markCompleteValidation to utils/validators/tournamentValidator.js (validate id param)
-- [ ] T029 [P] Add deleteTournamentValidation to utils/validators/tournamentValidator.js (validate id param)
-- [ ] T030 Add update method to Services/tournamentService.js (reject if isCompleted; write AuditLog UPDATE)
-- [ ] T031 Add markComplete method to Services/tournamentService.js (check no IN_PROGRESS matches; set isCompleted=true; write AuditLog MARK_COMPLETE)
-- [ ] T032 Add delete method to Services/tournamentService.js (check no players or matches associated; write AuditLog DELETE; throw 409 if associations exist)
-- [ ] T033 Add list method to Services/tournamentService.js with pagination (use parsePagination, filter by completed/date range, include playerCount and matchCount)
-- [ ] T034 [P] Add getById, update, markComplete, delete, list controller methods to Controllers/tournamentController.js
-- [ ] T035 [P] Add PUT /:id, DELETE /:id, POST /:id/complete, GET /:id (with stats), GET / (paginated) routes to Routes/tournamentRoutes.js
+- [x] T026 Add getById method to Services/tournamentService.js with summary stats (playerCount, matchCount, matchesByStatus aggregation)
+- [x] T027 [P] Add updateTournamentValidation to utils/validators/tournamentValidator.js (validate name, startDate, endDate — all optional)
+- [x] T028 [P] Add markCompleteValidation to utils/validators/tournamentValidator.js (validate id param)
+- [x] T029 [P] Add deleteTournamentValidation to utils/validators/tournamentValidator.js (validate id param)
+- [x] T030 Add update method to Services/tournamentService.js (reject if isCompleted; write AuditLog UPDATE)
+- [x] T031 Add markComplete method to Services/tournamentService.js (check no IN_PROGRESS matches; set isCompleted=true; write AuditLog MARK_COMPLETE)
+- [x] T032 Add delete method to Services/tournamentService.js (check no players or matches associated; write AuditLog DELETE; throw 409 if associations exist)
+- [x] T033 Add list method to Services/tournamentService.js with pagination (use parsePagination, filter by completed/date range, include playerCount and matchCount)
+- [x] T034 [P] Add getById, update, markComplete, delete, list controller methods to Controllers/tournamentController.js
+- [x] T035 [P] Add PUT /:id, DELETE /:id, POST /:id/complete, GET /:id (with stats), GET / (paginated) routes to Routes/tournamentRoutes.js
 
 **Checkpoint**: Tournament lifecycle fully functional with audit logging. Can update, complete, delete, and list tournaments.
 
@@ -112,15 +112,15 @@
 
 ### Implementation for User Story 4
 
-- [ ] T036 Add list method to Services/matchService.js with pagination (use parsePagination, filter by tournamentId/status/weightClass/bracketRound, include player names)
-- [ ] T037 Add schedule method to Services/matchService.js (validate both players exist in tournament, check conflict window using roundDurationSec × maxRounds per R4, create match with status SCHEDULED; write AuditLog SCHEDULE_MATCH)
-- [ ] T038 Add reschedule method to Services/matchService.js (validate match is SCHEDULED, check conflict window, update scheduledTime; write AuditLog RESCHEDULE_MATCH)
-- [ ] T039 Add walkover method to Services/matchService.js (validate match exists and is SCHEDULED/IN_PROGRESS, winner is one of the two players, call existing endMatch logic with endReason WALKOVER; write AuditLog WALKOVER)
-- [ ] T040 [P] Add scheduleMatchValidation to utils/validators/matchValidator.js (validate tournamentId, player1Id, player2Id, scheduledTime, optional type/weightClass)
-- [ ] T041 [P] Add rescheduleMatchValidation to utils/validators/matchValidator.js (validate scheduledTime is ISO8601 and in future)
-- [ ] T042 [P] Add walkoverValidation to utils/validators/matchValidator.js (validate winnerId, endReason)
-- [ ] T043 [P] Add list, schedule, reschedule, walkover controller methods to Controllers/matchController.js
-- [ ] T044 [P] Add GET /, POST /schedule, PUT /:id/reschedule, POST /:id/walkover routes to Routes/matchRoutes.js (protect + adminGuard/HEAD_JUDGE for mutations)
+- [x] T036 Add list method to Services/matchService.js with pagination (use parsePagination, filter by tournamentId/status/weightClass/bracketRound, include player names)
+- [x] T037 Add schedule method to Services/matchService.js (validate both players exist in tournament, check conflict window using roundDurationSec × maxRounds per R4, create match with status SCHEDULED; write AuditLog SCHEDULE_MATCH)
+- [x] T038 Add reschedule method to Services/matchService.js (validate match is SCHEDULED, check conflict window, update scheduledTime; write AuditLog RESCHEDULE_MATCH)
+- [x] T039 Add walkover method to Services/matchService.js (validate match exists and is SCHEDULED/IN_PROGRESS, winner is one of the two players, call existing endMatch logic with endReason WALKOVER; write AuditLog WALKOVER)
+- [x] T040 [P] Add scheduleMatchValidation to utils/validators/matchValidator.js (validate tournamentId, player1Id, player2Id, scheduledTime, optional type/weightClass)
+- [x] T041 [P] Add rescheduleMatchValidation to utils/validators/matchValidator.js (validate scheduledTime is ISO8601 and in future)
+- [x] T042 [P] Add walkoverValidation to utils/validators/matchValidator.js (validate winnerId, endReason)
+- [x] T043 [P] Add list, schedule, reschedule, walkover controller methods to Controllers/matchController.js
+- [x] T044 [P] Add GET /, POST /schedule, PUT /:id/reschedule, POST /:id/walkover routes to Routes/matchRoutes.js (protect + adminGuard/HEAD_JUDGE for mutations)
 
 **Checkpoint**: Match scheduling fully functional with audit logging. Can list, schedule, reschedule, cancel, and walkover matches.
 
@@ -134,15 +134,15 @@
 
 ### Implementation for User Story 5
 
-- [ ] T045 Create Services/adminService.js with listUsers method (paginated, include globalRole/tkdRole/isActive/createdAt)
-- [ ] T046 Add assignRole method to Services/adminService.js (validate target user exists, tkdRole is valid ENUM value; write AuditLog ASSIGN_ROLE)
-- [ ] T047 Add revokeRole method to Services/adminService.js (set tkdRole to null; write AuditLog REVOKE_ROLE)
-- [ ] T048 Add deactivateUser method to Services/adminService.js (check user not judge on IN_PROGRESS match per EC6; set isActive=false; write AuditLog DEACTIVATE)
-- [ ] T049 Add reactivateUser method to Services/adminService.js (set isActive=true; write AuditLog REACTIVATE)
-- [ ] T050 [P] Create utils/validators/adminValidator.js with assignRoleValidation (validate tkdRole is valid ENUM or null) and userIdValidation
-- [ ] T051 [P] Create Controllers/adminController.js with listUsers, assignRole, revokeRole, deactivateUser, reactivateUser methods
-- [ ] T052 [P] Create Routes/adminRoutes.js with GET /users, PUT /users/:id/role, PUT /users/:id/deactivate, PUT /users/:id/reactivate (protect + roleGuard('super_admin'))
-- [ ] T053 Mount adminRoutes in Routes/index.js as router.use('/admin', adminRoutes)
+- [x] T045 Create Services/adminService.js with listUsers method (paginated, include globalRole/tkdRole/isActive/createdAt)
+- [x] T046 Add assignRole method to Services/adminService.js (validate target user exists, tkdRole is valid ENUM value; write AuditLog ASSIGN_ROLE)
+- [x] T047 Add revokeRole method to Services/adminService.js (set tkdRole to null; write AuditLog REVOKE_ROLE)
+- [x] T048 Add deactivateUser method to Services/adminService.js (check user not judge on IN_PROGRESS match per EC6; set isActive=false; write AuditLog DEACTIVATE)
+- [x] T049 Add reactivateUser method to Services/adminService.js (set isActive=true; write AuditLog REACTIVATE)
+- [x] T050 [P] Create utils/validators/adminValidator.js with assignRoleValidation (validate tkdRole is valid ENUM or null) and userIdValidation
+- [x] T051 [P] Create Controllers/adminController.js with listUsers, assignRole, revokeRole, deactivateUser, reactivateUser methods
+- [x] T052 [P] Create Routes/adminRoutes.js with GET /users, PUT /users/:id/role, PUT /users/:id/deactivate, PUT /users/:id/reactivate (protect + roleGuard('super_admin'))
+- [x] T053 Mount adminRoutes in Routes/index.js as router.use('/admin', adminRoutes)
 
 **Checkpoint**: User administration fully functional with audit logging. Can list, assign roles, deactivate, and reactivate users.
 
@@ -156,10 +156,10 @@
 
 ### Implementation for User Story 6
 
-- [ ] T054 Add getTournamentOverview method to Services/tournamentService.js (aggregate: totalPlayers, totalMatches, matchesByStatus, upcomingMatches within next hour using scheduledTime)
-- [ ] T055 Add getTournamentList method to Services/tournamentService.js (paginated, include playerCount and matchCount per tournament)
-- [ ] T056 [P] Add getOverview, getList controller methods to Controllers/tournamentController.js (or new Controllers/dashboardController.js)
-- [ ] T057 [P] Add GET /dashboard/tournaments/:id/overview, GET /dashboard/tournaments routes to Routes/tournamentRoutes.js or new Routes/dashboardRoutes.js
+- [x] T054 Add getTournamentOverview method to Services/tournamentService.js (aggregate: totalPlayers, totalMatches, matchesByStatus, upcomingMatches within next hour using scheduledTime)
+- [x] T055 Add getTournamentList method to Services/tournamentService.js (paginated, include playerCount and matchCount per tournament)
+- [x] T056 [P] Add getOverview, getList controller methods to Controllers/tournamentController.js (or new Controllers/dashboardController.js)
+- [x] T057 [P] Add GET /dashboard/tournaments/:id/overview, GET /dashboard/tournaments routes to Routes/tournamentRoutes.js or new Routes/dashboardRoutes.js
 
 **Checkpoint**: Dashboard statistics fully functional. Can view tournament overview and list with status.
 
@@ -169,10 +169,10 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T058 Update Postman collection in postman/collection.json with all new endpoints (per constitution principle IX)
-- [ ] T059 Add rate limiting to mutation endpoints via rateLimiter middleware where appropriate (user admin, bulk operations)
-- [ ] T060 Validate all new endpoints follow error response conventions (ApiErrors.* with status, message, code)
-- [ ] T061 Run quickstart.md validation — execute all manual test commands against running server
+- [x] T058 Update Postman collection in postman/collection.json with all new endpoints (per constitution principle IX)
+- [x] T059 Add rate limiting to mutation endpoints via rateLimiter middleware where appropriate (user admin, bulk operations)
+- [x] T060 Validate all new endpoints follow error response conventions (ApiErrors.* with status, message, code)
+- [x] T061 Run quickstart.md validation — execute all manual test commands against running server
 
 ---
 

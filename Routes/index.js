@@ -11,6 +11,8 @@ const tournamentRoutes = require('./tournamentRoutes');
 const playerRoutes = require('./playerRoutes');
 const clubRoutes = require('./clubRoutes');
 const matchRoutes = require('./matchRoutes');
+const adminRoutes = require('./adminRoutes');
+const dashboardRoutes = require('./dashboardRoutes');
 
 router.use('/healthz', healthRoutes);
 router.use('/auth', authRoutes);
@@ -19,5 +21,7 @@ router.use('/tournaments', tournamentRoutes);
 router.use('/players', playerRoutes);
 router.use('/clubs', clubRoutes);
 router.use('/matches', matchRoutes);
+router.use('/admin', adminRoutes);
+router.use('/dashboard', dashboardRoutes);
 
 module.exports = router;
