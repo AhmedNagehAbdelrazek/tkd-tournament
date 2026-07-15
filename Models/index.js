@@ -18,6 +18,8 @@ Match.belongsTo(Tournament, { foreignKey: 'tournament_id' });
 Match.belongsTo(Player, { as: 'player1', foreignKey: 'player1_id' });
 Match.belongsTo(Player, { as: 'player2', foreignKey: 'player2_id' });
 Match.belongsTo(Player, { as: 'winner', foreignKey: 'winner_id' });
+Match.belongsTo(Match, { as: 'nextMatch', foreignKey: 'next_match_id' });
+Match.hasMany(Match, { as: 'feederMatches', foreignKey: 'next_match_id' });
 
 Match.hasMany(MatchEvent, { foreignKey: 'match_id' });
 MatchEvent.belongsTo(Match, { foreignKey: 'match_id' });

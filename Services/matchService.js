@@ -1,6 +1,7 @@
 const { Match, Player, MatchEvent } = require('../Models');
 const { ApiErrors } = require('../utils/ApiError');
-const { MATCH_STATUS, MATCH_EVENT_TYPES } = require('../config/constants');
+const { MATCH_STATUS, MATCH_EVENT_TYPES, END_REASONS } = require('../config/constants');
+const { progressWinner } = require('./bracketService');
 
 const validTransitions = {
   [MATCH_STATUS.SCHEDULED]: [MATCH_STATUS.IN_PROGRESS, MATCH_STATUS.CANCELLED],
@@ -48,7 +49,7 @@ async function resumeMatch(matchId) {
   return { id: match.id, status: match.status, resumedAt: new Date() };
 }
 
-async function endMatch(matchId, winnerId) {
+async function endMatch(matchId, winnerId, endReason) {
   const match = await Match.findByPk(matchId);
   if (!match) throw ApiErrors.notFound('Match not found');
   validateTransition(match.status, MATCH_STATUS.FINISHED);
@@ -58,6 +59,7 @@ async function endMatch(matchId, winnerId) {
   match.status = MATCH_STATUS.FINISHED;
   match.winnerId = winnerId || null;
   match.endTime = new Date();
+  if (endReason) match.endReason = endReason;
   await match.save();
   await MatchEvent.create({
     matchId: match.id,
@@ -65,12 +67,24 @@ async function endMatch(matchId, winnerId) {
     roundNumber: match.currentRound,
     metadata: {
       winner: winnerId,
+      endReason,
       finalScore: { player1: match.scorePlayer1, player2: match.scorePlayer2 }
     }
   });
+
+  let progression = null;
+  try {
+    progression = await progressWinner(match.id);
+  } catch (err) {
+    console.error('Progression error for match', matchId, err.message);
+  }
+
   return {
-    id: match.id, status: match.status, winnerId: match.winnerId, endTime: match.endTime,
-    finalScore: { player1: match.scorePlayer1, player2: match.scorePlayer2 }
+    id: match.id, tournamentId: match.tournamentId, status: match.status,
+    winnerId: match.winnerId, endTime: match.endTime,
+    weightClass: match.weightClass,
+    finalScore: { player1: match.scorePlayer1, player2: match.scorePlayer2 },
+    progression
   };
 }
 

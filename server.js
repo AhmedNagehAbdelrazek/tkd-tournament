@@ -27,4 +27,6 @@ const app = createApp();
 const httpServer = http.createServer(app);
 const io = createSocketServer(httpServer);
 
+app.set('io', io);
+
 module.exports = app;

@@ -92,6 +92,33 @@ function registerScoringHandlers(io, socket) {
     }
   });
 
+  socket.on('MATCH:END', async (data, callback) => {
+    if (!socket.tkdRole || socket.tkdRole !== TKD_ROLES.MAT_JUDGE) {
+      if (callback) callback({ success: false, error: { code: 'FORBIDDEN', message: 'Only MAT_JUDGE can end matches' } });
+      return;
+    }
+    try {
+      const result = await matchService.endMatch(data.matchId, data.winnerId, data.endReason);
+      io.to(`match_${data.matchId}`).emit('MATCH:STATE_UPDATE', {
+        id: result.id,
+        status: result.status,
+        winnerId: result.winnerId,
+        endTime: result.endTime,
+        finalScore: result.finalScore,
+      });
+      if (result.progression) {
+        io.emit('BRACKET:UPDATED', {
+          tournamentId: result.tournamentId,
+          weightClass: result.weightClass,
+          gender: result.gender,
+        });
+      }
+      if (callback) callback({ success: true, matchId: result.id, winnerId: result.winnerId });
+    } catch (err) {
+      if (callback) callback({ success: false, error: { code: 'INVALID_ACTION', message: err.message } });
+    }
+  });
+
   socket.on('MATCH:REQUEST_STATE', async ({ matchId }, callback) => {
     try {
       const state = await matchService.getMatchState(matchId);

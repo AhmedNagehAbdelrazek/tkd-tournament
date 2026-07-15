@@ -85,6 +85,36 @@ Match.init(
       defaultValue: 0,
       field: 'score_player2',
     },
+    nextMatchId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'next_match_id',
+    },
+    nextMatchSlot: {
+      type: DataTypes.ENUM('PLAYER1', 'PLAYER2'),
+      allowNull: true,
+      field: 'next_match_slot',
+    },
+    stageName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'Round 1',
+      field: 'stage_name',
+    },
+    bracketPosition: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      field: 'bracket_position',
+    },
+    endReason: {
+      type: DataTypes.ENUM(
+        'TIME_EXPIRED', 'POINT_GAP', 'WALKOVER', 'INJURY_WITHDRAWAL',
+        'DISQUALIFICATION', 'REFEREE_STOPPAGE', 'GOLDEN_POINT', 'BYE'
+      ),
+      allowNull: true,
+      field: 'end_reason',
+    },
     createdAt: {
       type: DataTypes.DATE,
       field: 'createdat',

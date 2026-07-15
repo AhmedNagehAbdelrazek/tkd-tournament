@@ -1,20 +1,44 @@
 {
   "info": {
     "name": "TKD Tournament API",
-    "description": "Postman collection for the Taekwondo Match Management System\n\nBase URL: {{base_url}}\nAuth: Bearer token via {{auth_token}}\n\nEndpoints:\n- Health: GET /api/healthz\n- Auth: POST /api/auth/tkd/login, POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me, PATCH /api/auth/me\n- Clubs: GET/POST /api/clubs\n- Tournaments: GET/POST /api/tournaments, GET /api/tournaments/:id, PUT /api/tournaments/:id/settings, GET /api/tournaments/:id/excluded-players\n- Players: GET/POST /api/players, POST /api/players/bulk\n- Matches: POST /api/matches/generate, GET /api/matches/:id\n- Match State: POST /api/matches/:id/start|pause|resume|end|cancel\n- HTTP Fallback Scoring: POST /api/matches/:id/points, POST /api/matches/:id/remove-points, POST /api/matches/:id/end-round",
+    "description": "Postman collection for the Taekwondo Match Management System\n\nBase URL: {{base_url}}\nAuth: Bearer token via {{auth_token}}\n\nEndpoints:\n- Health: GET /api/healthz\n- Auth: POST /api/auth/tkd/login, POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me, PATCH /api/auth/me\n- Clubs: GET/POST /api/clubs\n- Tournaments: GET/POST /api/tournaments, GET /api/tournaments/:id, PUT /api/tournaments/:id/settings, GET /api/tournaments/:id/excluded-players\n- Players: GET/POST /api/players, POST /api/players/bulk\n- Matches: POST /api/matches/generate, GET /api/matches/:id\n- Match State: POST /api/matches/:id/start|pause|resume|end|cancel\n- HTTP Fallback Scoring: POST /api/matches/:id/points, POST /api/matches/:id/remove-points, POST /api/matches/:id/end-round\n---\nAdded by Bracket Progression Flow:\n- GET /api/tournaments/:id/bracket\n- POST /api/tournaments/:id/bracket/override\n- endReason added to End Match payload\n- WebSocket Events folder (documentation)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "base_url", "value": "http://localhost:3000/api" },
-    { "key": "auth_token", "value": "" },
-    { "key": "tournament_id", "value": "" },
-    { "key": "player_id", "value": "" },
-    { "key": "club_id", "value": "" },
-    { "key": "match_id", "value": "" }
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api"
+    },
+    {
+      "key": "auth_token",
+      "value": ""
+    },
+    {
+      "key": "tournament_id",
+      "value": ""
+    },
+    {
+      "key": "player_id",
+      "value": ""
+    },
+    {
+      "key": "club_id",
+      "value": ""
+    },
+    {
+      "key": "match_id",
+      "value": ""
+    }
   ],
   "auth": {
     "type": "bearer",
-    "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
   },
   "item": [
     {
@@ -38,24 +62,45 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/tkd/login",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "tkd", "login"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "tkd",
+                "login"
+              ]
             }
           },
           "response": [
             {
               "name": "Login Success",
-              "originalRequest": { "method": "POST", "url": { "raw": "{{base_url}}/auth/tkd/login" } },
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{base_url}}/auth/tkd/login"
+                }
+              },
               "status": "OK",
               "code": 200,
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
               "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIs...\",\n  \"user\": {\n    \"id\": 1,\n    \"name\": \"Admin User\",\n    \"email\": \"admin@example.com\",\n    \"role\": \"ADMIN\"\n  }\n}"
             }
           ]
@@ -64,15 +109,25 @@
           "name": "Signup",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"password123\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/signup",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "signup"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "signup"
+              ]
             }
           },
           "response": [
@@ -102,15 +157,25 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "login"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             }
           },
           "response": [
@@ -128,8 +193,13 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/auth/me",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "me"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
             }
           },
           "response": [
@@ -145,15 +215,25 @@
           "name": "Update Profile",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Updated Name\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/me",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "me"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
             }
           },
           "response": [
@@ -176,8 +256,12 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/healthz",
-              "host": ["{{base_url}}"],
-              "path": ["healthz"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "healthz"
+              ]
             }
           },
           "response": [
@@ -198,12 +282,25 @@
           "name": "Create Club",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Dragon TKD Club\"\n}"
             },
-            "url": { "raw": "{{base_url}}/clubs", "host": ["{{base_url}}"], "path": ["clubs"] }
+            "url": {
+              "raw": "{{base_url}}/clubs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs"
+              ]
+            }
           },
           "response": [
             {
@@ -218,7 +315,15 @@
           "name": "List Clubs",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{base_url}}/clubs", "host": ["{{base_url}}"], "path": ["clubs"] }
+            "url": {
+              "raw": "{{base_url}}/clubs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs"
+              ]
+            }
           },
           "response": [
             {
@@ -254,15 +359,24 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Summer Championship 2026\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-03\",\n  \"settings\": {\n    \"roundDurationSec\": 120,\n    \"restBetweenRoundsSec\": 60,\n    \"restBetweenMatchesMin\": 15,\n    \"pointGapAutoEnd\": 20,\n    \"weightClasses\": {\n      \"MALE\": [\n        { \"name\": \"Male -58kg\", \"min\": 0, \"max\": 58 },\n        { \"name\": \"Male -68kg\", \"min\": 58.01, \"max\": 68 }\n      ],\n      \"FEMALE\": [\n        { \"name\": \"Female -49kg\", \"min\": 0, \"max\": 49 },\n        { \"name\": \"Female -57kg\", \"min\": 49.01, \"max\": 57 }\n      ]\n    }\n  }\n}"
             },
             "url": {
               "raw": "{{base_url}}/tournaments",
-              "host": ["{{base_url}}"],
-              "path": ["tournaments"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tournaments"
+              ]
             }
           },
           "response": [
@@ -280,8 +394,13 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/tournaments/{{tournament_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["tournaments", "{{tournament_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tournaments",
+                "{{tournament_id}}"
+              ]
             }
           },
           "response": [
@@ -299,8 +418,12 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/tournaments",
-              "host": ["{{base_url}}"],
-              "path": ["tournaments"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tournaments"
+              ]
             }
           },
           "response": [
@@ -316,15 +439,26 @@
           "name": "Update Tournament Settings",
           "request": {
             "method": "PUT",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"weightClasses\": {\n    \"MALE\": [\n      { \"name\": \"Male -58kg\", \"min\": 0, \"max\": 58 },\n      { \"name\": \"Male -74kg\", \"min\": 58.01, \"max\": 74 }\n    ],\n    \"FEMALE\": [\n      { \"name\": \"Female -49kg\", \"min\": 0, \"max\": 49 }\n    ]\n  }\n}"
             },
             "url": {
               "raw": "{{base_url}}/tournaments/{{tournament_id}}/settings",
-              "host": ["{{base_url}}"],
-              "path": ["tournaments", "{{tournament_id}}", "settings"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tournaments",
+                "{{tournament_id}}",
+                "settings"
+              ]
             }
           },
           "response": [
@@ -342,8 +476,14 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/tournaments/{{tournament_id}}/excluded-players",
-              "host": ["{{base_url}}"],
-              "path": ["tournaments", "{{tournament_id}}", "excluded-players"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tournaments",
+                "{{tournament_id}}",
+                "excluded-players"
+              ]
             }
           },
           "response": [
@@ -352,6 +492,83 @@
               "status": "OK",
               "code": 200,
               "body": "{\n  \"data\": {\n    \"excludedPlayers\": [\n      {\n        \"id\": 5,\n        \"name\": \"Ahmed Ali\",\n        \"gender\": \"MALE\",\n        \"weight\": 85,\n        \"clubName\": \"Cairo Tigers\",\n        \"reason\": \"No MALE weight class matches 85kg — available ranges: Male -58kg, Male -68kg\"\n      }\n    ],\n    \"total\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Bracket Tree",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}/bracket?weightClass=60-65kg&gender=MALE",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tournaments",
+                "{{tournament_id}}",
+                "bracket"
+              ],
+              "query": [
+                {
+                  "key": "weightClass",
+                  "value": "60-65kg"
+                },
+                {
+                  "key": "gender",
+                  "value": "MALE"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Bracket Tree",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": {\n    \"tournamentId\": 1,\n    \"weightClass\": \"60-65kg\",\n    \"gender\": \"MALE\",\n    \"currentStage\": \"Quarterfinal\",\n    \"bracket\": {\n      \"id\": 7,\n      \"stageName\": \"Final\",\n      \"status\": \"SCHEDULED\",\n      \"bracketPosition\": 7\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Override Match Slot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": 1,\n  \"playerId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}/bracket/override",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tournaments",
+                "{{tournament_id}}",
+                "bracket",
+                "override"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Slot Overridden",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": {\n    \"nextMatchId\": 3,\n    \"slot\": \"PLAYER1\",\n    \"playerId\": 1\n  }\n}"
             }
           ]
         }
@@ -364,15 +581,24 @@
           "name": "Register Player",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"tournamentId\": {{tournament_id}},\n  \"name\": \"John Doe\",\n  \"dob\": \"2010-05-15\",\n  \"weight\": 12.5,\n  \"gender\": \"MALE\",\n  \"clubId\": {{club_id}}\n}"
             },
             "url": {
               "raw": "{{base_url}}/players",
-              "host": ["{{base_url}}"],
-              "path": ["players"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
             }
           },
           "response": [
@@ -388,15 +614,25 @@
           "name": "Bulk Register Players",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"tournamentId\": {{tournament_id}},\n  \"players\": [\n    {\n      \"name\": \"Jane Doe\",\n      \"dob\": \"2011-03-20\",\n      \"weight\": 11.0,\n      \"gender\": \"FEMALE\",\n      \"clubId\": {{club_id}}\n    },\n    {\n      \"name\": \"Bob Smith\",\n      \"dob\": \"2009-11-10\",\n      \"weight\": 14.0,\n      \"gender\": \"MALE\",\n      \"clubId\": {{club_id}}\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/players/bulk",
-              "host": ["{{base_url}}"],
-              "path": ["players", "bulk"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players",
+                "bulk"
+              ]
             }
           },
           "response": [
@@ -414,11 +650,18 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/players?tournamentId={{tournament_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["players"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
             },
             "params": [
-              { "key": "tournamentId", "value": "{{tournament_id}}" }
+              {
+                "key": "tournamentId",
+                "value": "{{tournament_id}}"
+              }
             ]
           },
           "response": [
@@ -453,15 +696,25 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"tournamentId\": {{tournament_id}},\n  \"weightClass\": \"Male -58kg\",\n  \"gender\": \"MALE\",\n  \"matchType\": \"SINGLE_ELIMINATION\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/matches/generate",
-              "host": ["{{base_url}}"],
-              "path": ["matches", "generate"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "generate"
+              ]
             }
           },
           "response": [
@@ -479,8 +732,13 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/matches/{{match_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["matches", "{{match_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "{{match_id}}"
+              ]
             }
           },
           "response": [
@@ -498,8 +756,14 @@
             "method": "POST",
             "url": {
               "raw": "{{base_url}}/matches/{{match_id}}/start",
-              "host": ["{{base_url}}"],
-              "path": ["matches", "{{match_id}}", "start"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "{{match_id}}",
+                "start"
+              ]
             }
           },
           "response": [
@@ -517,8 +781,14 @@
             "method": "POST",
             "url": {
               "raw": "{{base_url}}/matches/{{match_id}}/pause",
-              "host": ["{{base_url}}"],
-              "path": ["matches", "{{match_id}}", "pause"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "{{match_id}}",
+                "pause"
+              ]
             }
           },
           "response": [
@@ -536,8 +806,14 @@
             "method": "POST",
             "url": {
               "raw": "{{base_url}}/matches/{{match_id}}/resume",
-              "host": ["{{base_url}}"],
-              "path": ["matches", "{{match_id}}", "resume"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "{{match_id}}",
+                "resume"
+              ]
             }
           },
           "response": [
@@ -553,15 +829,26 @@
           "name": "End Match",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"winnerId\": 1\n}"
+              "raw": "{\n  \"winnerId\": 1,\n  \"endReason\": \"TIME_EXPIRED\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/matches/{{match_id}}/end",
-              "host": ["{{base_url}}"],
-              "path": ["matches", "{{match_id}}", "end"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "{{match_id}}",
+                "end"
+              ]
             }
           },
           "response": [
@@ -579,8 +866,14 @@
             "method": "POST",
             "url": {
               "raw": "{{base_url}}/matches/{{match_id}}/cancel",
-              "host": ["{{base_url}}"],
-              "path": ["matches", "{{match_id}}", "cancel"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "{{match_id}}",
+                "cancel"
+              ]
             }
           },
           "response": [
@@ -596,15 +889,26 @@
           "name": "Add Points (HTTP Fallback)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"playerId\": 1,\n  \"points\": 3,\n  \"roundNumber\": 1\n}"
             },
             "url": {
               "raw": "{{base_url}}/matches/{{match_id}}/points",
-              "host": ["{{base_url}}"],
-              "path": ["matches", "{{match_id}}", "points"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "{{match_id}}",
+                "points"
+              ]
             }
           },
           "response": [
@@ -620,15 +924,26 @@
           "name": "Remove Points (HTTP Fallback)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"playerId\": 1,\n  \"points\": 1,\n  \"roundNumber\": 1\n}"
             },
             "url": {
               "raw": "{{base_url}}/matches/{{match_id}}/remove-points",
-              "host": ["{{base_url}}"],
-              "path": ["matches", "{{match_id}}", "remove-points"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "{{match_id}}",
+                "remove-points"
+              ]
             }
           },
           "response": [
@@ -644,15 +959,26 @@
           "name": "End Round (HTTP Fallback)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"roundNumber\": 1\n}"
             },
             "url": {
               "raw": "{{base_url}}/matches/{{match_id}}/end-round",
-              "host": ["{{base_url}}"],
-              "path": ["matches", "{{match_id}}", "end-round"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "{{match_id}}",
+                "end-round"
+              ]
             }
           },
           "response": [
@@ -663,6 +989,172 @@
               "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"status\": \"IN_PROGRESS\",\n    \"currentRound\": 2\n  }\n}"
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "WebSocket Events",
+      "description": "Socket.IO events for /live-matches namespace. Not executable via REST — payload documentation only.",
+      "item": [
+        {
+          "name": "MATCH:ADD_POINT",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": 1,\n  \"playerId\": 1,\n  \"points\": 3,\n  \"roundNumber\": 1,\n  \"action\": \"ADD\"\n}"
+            },
+            "url": {
+              "raw": "socket:///live-matches",
+              "host": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MATCH:REMOVE_POINT",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": 1,\n  \"playerId\": 1,\n  \"points\": 1,\n  \"roundNumber\": 1,\n  \"action\": \"REMOVE\"\n}"
+            },
+            "url": {
+              "raw": "socket:///live-matches",
+              "host": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MATCH:END_ROUND",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": 1\n}"
+            },
+            "url": {
+              "raw": "socket:///live-matches",
+              "host": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MATCH:END",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": 1,\n  \"winnerId\": 1,\n  \"endReason\": \"TIME_EXPIRED\"\n}"
+            },
+            "url": {
+              "raw": "socket:///live-matches",
+              "host": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MATCH:REQUEST_STATE",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": 1\n}"
+            },
+            "url": {
+              "raw": "socket:///live-matches",
+              "host": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MATCH:START",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": 1\n}"
+            },
+            "url": {
+              "raw": "socket:///live-matches",
+              "host": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MATCH:PAUSE",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": 1\n}"
+            },
+            "url": {
+              "raw": "socket:///live-matches",
+              "host": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MATCH:RESUME",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": 1\n}"
+            },
+            "url": {
+              "raw": "socket:///live-matches",
+              "host": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "join_match",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": 1\n}"
+            },
+            "url": {
+              "raw": "socket:///live-matches",
+              "host": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "leave_match",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": 1\n}"
+            },
+            "url": {
+              "raw": "socket:///live-matches",
+              "host": []
+            }
+          },
+          "response": []
         }
       ]
     }

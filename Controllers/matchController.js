@@ -33,7 +33,17 @@ const resume = async (req, res, next) => {
 
 const endMatch = async (req, res, next) => {
   try {
-    const result = await matchService.endMatch(req.params.id, req.body.winnerId);
+    const result = await matchService.endMatch(req.params.id, req.body.winnerId, req.body.endReason);
+    if (result.progression) {
+      const io = req.app.get('io');
+      if (io) {
+        io.of('/live-matches').emit('BRACKET:UPDATED', {
+          tournamentId: result.tournamentId,
+          weightClass: result.weightClass,
+          gender: result.gender,
+        });
+      }
+    }
     successResponse(res, result);
   } catch (err) { next(err); }
 };

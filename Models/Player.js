@@ -22,6 +22,10 @@ Player.init(
       type: DataTypes.DECIMAL(5, 2),
       allowNull: false,
     },
+    seed: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
     gender: {
       type: DataTypes.ENUM('MALE', 'FEMALE'),
       allowNull: false,

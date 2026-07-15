@@ -28,12 +28,12 @@ description: "Task list for Bracket Progression Flow feature implementation"
 
 **Purpose**: Database schema updates that all user stories depend on
 
-- [ ] T001 Add `seed` field to Player model in src/models/Player.js
-- [ ] T002 [P] Add `nextMatchId` field (UUID FK → Match) to Match model in src/models/Match.js
-- [ ] T003 [P] Add `nextMatchSlot` field (ENUM PLAYER1/PLAYER2) to Match model in src/models/Match.js
-- [ ] T004 [P] Add `stageName` field (STRING) to Match model in src/models/Match.js
-- [ ] T005 [P] Add `bracketPosition` field (INTEGER) to Match model in src/models/Match.js
-- [ ] T006 [P] Add `endReason` field (ENUM with all end reasons) to Match model in src/models/Match.js
+- [X] T001 Add `seed` field to Player model in Models/Player.js
+- [X] T002 [P] Add `nextMatchId` field (FK → Match) to Match model in Models/Match.js
+- [X] T003 [P] Add `nextMatchSlot` field (ENUM PLAYER1/PLAYER2) to Match model in Models/Match.js
+- [X] T004 [P] Add `stageName` field (STRING) to Match model in Models/Match.js
+- [X] T005 [P] Add `bracketPosition` field (INTEGER) to Match model in Models/Match.js
+- [X] T006 [P] Add `endReason` field (ENUM with all end reasons) to Match model in Models/Match.js
 
 ---
 
@@ -43,19 +43,19 @@ description: "Task list for Bracket Progression Flow feature implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T007 Create BracketService skeleton in src/services/BracketService.js
-- [ ] T008 Implement `progressWinner(matchId)` method in BracketService
+- [X] T007 Create BracketService skeleton in Services/bracketService.js
+- [X] T008 Implement `progressWinner(matchId)` method in BracketService
   - Look up finished match's winnerId and nextMatchId/nextMatchSlot
   - Update nextMatch's player1Id or player2Id
   - Handle null nextMatchId (Final match — no progression)
-- [ ] T009 Implement `buildBracketTree(tournamentId, weightClass, gender)` method in BracketService
+- [X] T009 Implement `buildBracketTree(tournamentId, weightClass, gender)` method in BracketService
   - Fetch all matches for tournament/weight/gender
   - Build hash map by match id
   - Recursively attach feeder matches as player1Source/player2Source
   - Return nested JSON with root = Final match (nextMatchId is null)
-- [ ] T010 Implement `determineCurrentStage(matches)` method in BracketService
+- [X] T010 Implement `determineCurrentStage(matches)` method in BracketService
   - Find deepest stage with at least one IN_PROGRESS or SCHEDULED match
-- [ ] T011 Implement `overrideNextMatchSlot(matchId, playerId)` method in BracketService
+- [X] T011 Implement `overrideNextMatchSlot(matchId, playerId)` method in BracketService
   - Allows Head Judge to manually assign a player to a next match slot
   - Validates the target match is not yet finished
 
@@ -71,18 +71,18 @@ description: "Task list for Bracket Progression Flow feature implementation"
 
 ### Tests for User Story 1
 
-- [ ] T012 [P] [US1] Unit test: progression advances winner to PLAYER1 slot in tests/unit/BracketService.test.js
-- [ ] T013 [P] [US1] Unit test: progression advances winner to PLAYER2 slot in tests/unit/BracketService.test.js
-- [ ] T014 [P] [US1] Unit test: progression does nothing for Final match (no nextMatchId) in tests/unit/BracketService.test.js
-- [ ] T015 [P] [US1] Unit test: progression with bye match (endReason BYE) in tests/unit/BracketService.test.js
-- [ ] T016 [P] [US1] Unit test: simultaneous match conclusions both fill correct slots in tests/unit/BracketService.test.js
-- [ ] T017 [P] [US1] Unit test: no progression when match is CANCELLED in tests/unit/BracketService.test.js
+- [X] T012 [P] [US1] Unit test: progression advances winner to PLAYER1 slot in tests/unit/bracketService.test.js
+- [X] T013 [P] [US1] Unit test: progression advances winner to PLAYER2 slot in tests/unit/bracketService.test.js
+- [X] T014 [P] [US1] Unit test: progression does nothing for Final match (no nextMatchId) in tests/unit/bracketService.test.js
+- [X] T015 [P] [US1] Unit test: progression with bye match (endReason BYE) in tests/unit/bracketService.test.js
+- [ ] T016 [P] [US1] Unit test: simultaneous match conclusions both fill correct slots in tests/unit/bracketService.test.js
+- [X] T017 [P] [US1] Unit test: no progression when match is CANCELLED in tests/unit/bracketService.test.js
 
 ### Implementation for User Story 1
 
-- [ ] T018 [US1] Integrate progression hook into MatchService after match finishes in src/services/MatchService.js
-- [ ] T019 [US1] Emit BRACKET:UPDATED socket event on successful progression in src/sockets/match.socket.js
-- [ ] T020 [US1] Add BRACKET:UPDATED event to Socket.IO contract documentation in specs/004-bracket-progression-flow/contracts/websocket.md
+- [X] T018 [US1] Integrate progression hook into MatchService after match finishes in Services/matchService.js
+- [X] T019 [US1] Emit BRACKET:UPDATED socket event on successful progression in socket/handlers/scoringHandler.js and Controllers/matchController.js
+- [X] T020 [US1] Add BRACKET:UPDATED event to Socket.IO contract documentation in specs/004-bracket-progression-flow/contracts/websocket.md
 
 **Checkpoint**: US1 complete — winners automatically advance to next match on match finish
 
@@ -96,23 +96,23 @@ description: "Task list for Bracket Progression Flow feature implementation"
 
 ### Tests for User Story 2
 
-- [ ] T021 [P] [US2] Unit test: buildBracketTree with 8 players (perfect power of 2) in tests/unit/BracketService.test.js
-- [ ] T022 [P] [US2] Unit test: buildBracketTree with 10 players (with byes) in tests/unit/BracketService.test.js
-- [ ] T023 [P] [US2] Unit test: buildBracketTree with empty bracket (no matches) in tests/unit/BracketService.test.js
-- [ ] T024 [P] [US2] Unit test: buildBracketTree with single match (Final only) in tests/unit/BracketService.test.js
-- [ ] T025 [P] [US2] Unit test: determineCurrentStage with mixed states in tests/unit/BracketService.test.js
-- [ ] T026 [P] [US2] Contract test: bracket response shape matches contract in tests/contract/bracket.contract.test.js
-- [ ] T027 [P] [US2] Integration test: GET /api/tournaments/:id/bracket returns 200 with correct tree in tests/integration/bracket.test.js
-- [ ] T028 [P] [US2] Integration test: GET /api/tournaments/:id/bracket with missing params returns 400 in tests/integration/bracket.test.js
-- [ ] T029 [P] [US2] Integration test: GET /api/tournaments/:id/bracket for non-existent tournament returns 404 in tests/integration/bracket.test.js
+- [X] T021 [P] [US2] Unit test: buildBracketTree with 8 players in tests/unit/bracketService.test.js
+- [ ] T022 [P] [US2] Unit test: buildBracketTree with 10 players (with byes) in tests/unit/bracketService.test.js
+- [X] T023 [P] [US2] Unit test: buildBracketTree with empty bracket in tests/unit/bracketService.test.js
+- [X] T024 [P] [US2] Unit test: buildBracketTree with single match (Final only) in tests/unit/bracketService.test.js
+- [X] T025 [P] [US2] Unit test: determineCurrentStage with mixed states in tests/unit/bracketService.test.js
+- [X] T026 [P] [US2] Contract test: bracket response shape matches contract in tests/contract/bracket.contract.test.js
+- [X] T027 [P] [US2] Integration test: GET /api/tournaments/:id/bracket returns 200 in tests/integration/bracket.test.js
+- [X] T028 [P] [US2] Integration test: GET /api/tournaments/:id/bracket with missing params returns 400 in tests/integration/bracket.test.js
+- [X] T029 [P] [US2] Integration test: GET /api/tournaments/:id/bracket for non-existent tournament in tests/integration/bracket.test.js
 - [ ] T030 [P] [US2] Integration test: match finish → progression reflected in bracket tree in tests/integration/bracket.test.js
 
 ### Implementation for User Story 2
 
-- [ ] T031 [P] [US2] Create bracket query parameter validator in src/utils/validators/bracket.validator.js
-- [ ] T032 [P] [US2] Create BracketController with GET handler in src/controllers/BracketController.js
-- [ ] T033 [US2] Add GET /api/tournaments/:id/bracket route in src/routes/tournament.routes.js
-- [ ] T034 [US2] Wire BracketService.buildBracketTree into BracketController response
+- [X] T031 [P] [US2] Create bracket query parameter validator in utils/validators/bracketValidator.js
+- [X] T032 [P] [US2] Create BracketController with GET handler in Controllers/bracketController.js
+- [X] T033 [US2] Add GET /api/tournaments/:id/bracket route in Routes/tournamentRoutes.js
+- [X] T034 [US2] Wire BracketService.buildBracketTree into BracketController response
 
 **Checkpoint**: US2 complete — clients can fetch the bracket tree for any weight class and gender
 
@@ -126,17 +126,17 @@ description: "Task list for Bracket Progression Flow feature implementation"
 
 ### Tests for User Story 3
 
-- [ ] T035 [P] [US3] Unit test: override assigns player to empty slot in tests/unit/BracketService.test.js
-- [ ] T036 [P] [US3] Unit test: override replaces existing winner in slot in tests/unit/BracketService.test.js
-- [ ] T037 [P] [US3] Unit test: override rejected when target match is already FINISHED in tests/unit/BracketService.test.js
-- [ ] T038 [P] [US3] Integration test: manual override endpoint returns 200 and bracket updates in tests/integration/bracket.test.js
+- [X] T035 [P] [US3] Unit test: override assigns player to empty slot in tests/unit/bracketService.test.js
+- [ ] T036 [P] [US3] Unit test: override replaces existing winner in slot in tests/unit/bracketService.test.js
+- [X] T037 [P] [US3] Unit test: override rejected when target match is already FINISHED in tests/unit/bracketService.test.js
+- [X] T038 [P] [US3] Integration test: manual override endpoint returns 200 and bracket updates in tests/integration/bracket.test.js
 
 ### Implementation for User Story 3
 
-- [ ] T039 [US3] Implement manual override REST endpoint in src/controllers/BracketController.js
-- [ ] T040 [US3] Add POST /api/tournaments/:id/bracket/override route in src/routes/tournament.routes.js
-- [ ] T041 [US3] Add validator for manual override (matchId, playerId, nextMatchId, nextMatchSlot) in src/utils/validators/bracket.validator.js
-- [ ] T042 [US3] Add override to contract docs in specs/004-bracket-progression-flow/contracts/rest-api.md
+- [X] T039 [US3] Implement manual override REST endpoint in Controllers/bracketController.js
+- [X] T040 [US3] Add POST /api/tournaments/:id/bracket/override route in Routes/tournamentRoutes.js
+- [X] T041 [US3] Add validator for manual override (matchId, playerId) in utils/validators/bracketValidator.js
+- [X] T042 [US3] Add override to contract docs in specs/004-bracket-progression-flow/contracts/rest-api.md
 
 **Checkpoint**: US3 complete — Head Judge can manually override bracket progression
 
@@ -144,10 +144,10 @@ description: "Task list for Bracket Progression Flow feature implementation"
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-**Purpose**: Improvements that affect multiple user stories
+**Purpose**: Improvements that affect multiple user states
 
-- [ ] T043 [P] Update Postman collection with new endpoints (GET bracket, POST override) in postman/collection.json
-- [ ] T044 [P] Add endReason to MatchEvent audit trail on match finish
+- [X] T043 [P] Update Postman collection with new endpoints (GET bracket, POST override) in postman/collection.json
+- [X] T044 [P] Add endReason to MatchEvent audit trail on match finish
 - [ ] T045 Run quickstart.md verification steps to validate full flow
 - [ ] T046 Review Constitution compliance for all new files
 

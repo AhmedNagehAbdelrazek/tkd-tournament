@@ -103,6 +103,55 @@ Get the nested bracket tree for a specific weight class and gender.
 }
 ```
 
+## POST /api/tournaments/:id/bracket/override
+
+Manually assign a player to a next-match slot (Head Judge only).
+
+### Request Body
+
+```json
+{
+  "matchId": 1,
+  "playerId": 5
+}
+```
+
+### Response
+
+**Status**: 200 OK
+
+```json
+{
+  "data": {
+    "nextMatchId": 3,
+    "slot": "PLAYER1",
+    "playerId": 5
+  }
+}
+```
+
+### Error Responses
+
+**Status**: 404 Not Found — Match not found
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Match not found"
+  }
+}
+```
+
+**Status**: 409 Conflict — Target match is already finished
+```json
+{
+  "error": {
+    "code": "CONFLICT",
+    "message": "Cannot override: target match is already finished"
+  }
+}
+```
+
 ### Notes
 
 - The `bracket` object is the Final match node, recursively populated with `player1Source`/`player2Source` for feeder matches
