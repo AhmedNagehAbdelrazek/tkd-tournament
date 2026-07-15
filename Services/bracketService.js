@@ -84,6 +84,47 @@ async function buildBracketTree(tournamentId, weightClass, gender) {
   return buildTreeFromMatches(filtered);
 }
 
+// ponytail: build all brackets for a tournament, grouped by gender and weight class
+async function buildAllBrackets(tournamentId) {
+  const tournament = await Tournament.findByPk(tournamentId);
+  if (!tournament) throw ApiErrors.notFound('Tournament not found');
+
+  const weightClasses = tournament.settings?.weightClasses || {};
+  const allMatches = await Match.findAll({
+    where: { tournamentId },
+    include: [
+      { model: Player, as: 'player1', attributes: ['id', 'name', 'weight', 'gender'] },
+      { model: Player, as: 'player2', attributes: ['id', 'name', 'weight', 'gender'] },
+      { model: Player, as: 'winner', attributes: ['id', 'name'] },
+    ],
+    order: [['bracketPosition', 'ASC']],
+  });
+
+  if (allMatches.length === 0) {
+    return { tournamentId, brackets: {}, currentStage: null };
+  }
+
+  const brackets = {};
+  for (const [gender, classes] of Object.entries(weightClasses)) {
+    if (!Array.isArray(classes)) continue;
+    for (const wc of classes) {
+      const range = { min: wc.min, max: wc.max };
+      const filtered = allMatches.filter((m) => {
+        const players = [m.player1, m.player2].filter(Boolean);
+        return players.some((p) => p.gender === gender) &&
+               players.some((p) => p.weight >= range.min && p.weight <= range.max);
+      });
+      if (filtered.length > 0) {
+        if (!brackets[gender]) brackets[gender] = {};
+        brackets[gender][wc.name] = buildTreeFromMatches(filtered);
+      }
+    }
+  }
+
+  const currentStage = determineCurrentStage(allMatches);
+  return { tournamentId, brackets, currentStage };
+}
+
 function buildTreeFromMatches(matches) {
   if (!matches || matches.length === 0) return null;
 
@@ -180,6 +221,7 @@ async function overrideNextMatchSlot(matchId, playerId) {
 module.exports = {
   progressWinner,
   buildBracketTree,
+  buildAllBrackets,
   buildTreeFromMatches,
   determineCurrentStage,
   overrideNextMatchSlot,

@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "TKD Tournament API",
-    "description": "Postman collection for the Taekwondo Match Management System\n\nBase URL: {{base_url}}\nAuth: Bearer token via {{auth_token}}\n\nEndpoints:\n- Health: GET /api/healthz\n- Auth: POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me, PATCH /api/auth/me\n- Clubs: GET/POST /api/clubs, GET/PUT/DELETE /api/clubs/:id, GET /api/clubs/:id/tournaments\n- Tournaments: GET/POST /api/tournaments, GET/PUT/DELETE /api/tournaments/:id, PUT /api/tournaments/:id/settings, POST /api/tournaments/:id/complete, GET /api/tournaments/:id/excluded-players, GET/POST /api/tournaments/:id/clubs, DELETE /api/tournaments/:id/clubs/:clubId\n- Players: GET/POST /api/players, POST /api/players/bulk, GET/PUT/DELETE /api/players/:id\n- Matches: GET/POST /api/matches, POST /api/matches/generate, POST /api/matches/schedule, PUT /api/matches/:id/reschedule, POST /api/matches/:id/walkover, GET /api/matches/:id\n- Match State: POST /api/matches/:id/start|pause|resume|end|cancel\n- HTTP Fallback Scoring: POST /api/matches/:id/points, POST /api/matches/:id/remove-points, POST /api/matches/:id/end-round\n- Bracket: GET /api/tournaments/:id/bracket, POST /api/tournaments/:id/bracket/override\n- Dashboard: GET /api/dashboard/tournaments, GET /api/dashboard/tournaments/:id/overview\n- User Admin: GET /api/admin/users, PUT /api/admin/users/:id/role, PUT /api/admin/users/:id/deactivate, PUT /api/admin/users/:id/reactivate",
+    "description": "Postman collection for the Taekwondo Match Management System\n\nBase URL: {{base_url}}\nAuth: Bearer token via {{auth_token}}\n\nEndpoints:\n- Health: GET /api/healthz\n- Auth: POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me, PATCH /api/auth/me\n- Clubs: GET/POST /api/clubs, GET/PUT/DELETE /api/clubs/:id, GET /api/clubs/:id/tournaments\n- Tournaments: GET/POST /api/tournaments, GET/PUT/DELETE /api/tournaments/:id, PUT /api/tournaments/:id/settings, POST /api/tournaments/:id/complete, GET /api/tournaments/:id/excluded-players, GET/POST /api/tournaments/:id/clubs, DELETE /api/tournaments/:id/clubs/:clubId\n- Players: GET/POST /api/players, POST /api/players/bulk, GET/PUT/DELETE /api/players/:id\n- Matches: GET/POST /api/matches, POST /api/matches/generate, POST /api/matches/schedule, PUT /api/matches/:id/reschedule, POST /api/matches/:id/walkover, GET /api/matches/:id\n- Match State: POST /api/matches/:id/start|pause|resume|end|cancel\n- HTTP Fallback Scoring: POST /api/matches/:id/points, POST /api/matches/:id/remove-points, POST /api/matches/:id/end-round\n- Bracket: GET /api/tournaments/:id/bracket (returns all brackets), POST /api/tournaments/:id/bracket/override\n- Dashboard: GET /api/dashboard/tournaments, GET /api/dashboard/tournaments/:id/overview\n- User Admin: GET /api/admin/users, PUT /api/admin/users/:id/role, PUT /api/admin/users/:id/deactivate, PUT /api/admin/users/:id/reactivate\n\nTournament Creation: POST /api/tournaments accepts optional clubIds array to register clubs in one request.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -318,7 +318,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Summer Championship 2026\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-03\",\n  \"settings\": {\n    \"roundDurationSec\": 120,\n    \"restBetweenRoundsSec\": 60,\n    \"restBetweenMatchesMin\": 15,\n    \"pointGapAutoEnd\": 20,\n    \"weightClasses\": {\n      \"MALE\": [\n        { \"name\": \"Male -58kg\", \"min\": 0, \"max\": 58 },\n        { \"name\": \"Male -68kg\", \"min\": 58.01, \"max\": 68 }\n      ],\n      \"FEMALE\": [\n        { \"name\": \"Female -49kg\", \"min\": 0, \"max\": 49 },\n        { \"name\": \"Female -57kg\", \"min\": 49.01, \"max\": 57 }\n      ]\n    }\n  }\n}"
+              "raw": "{\n  \"name\": \"Summer Championship 2026\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-03\",\n  \"clubIds\": [1, 2, 3],\n  \"settings\": {\n    \"roundDurationSec\": 120,\n    \"restBetweenRoundsSec\": 60,\n    \"restBetweenMatchesMin\": 15,\n    \"pointGapAutoEnd\": 20,\n    \"weightClasses\": {\n      \"MALE\": [\n        { \"name\": \"Male -58kg\", \"min\": 0, \"max\": 58 },\n        { \"name\": \"Male -68kg\", \"min\": 58.01, \"max\": 68 }\n      ],\n      \"FEMALE\": [\n        { \"name\": \"Female -49kg\", \"min\": 0, \"max\": 49 },\n        { \"name\": \"Female -57kg\", \"min\": 49.01, \"max\": 57 }\n      ]\n    }\n  }\n}"
             },
             "url": {
               "raw": "{{base_url}}/tournaments",
@@ -457,7 +457,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/tournaments/{{tournament_id}}/bracket?weightClass=60-65kg&gender=MALE",
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}/bracket",
               "host": [
                 "{{base_url}}"
               ],
@@ -465,7 +465,7 @@
                 "tournaments",
                 "{{tournament_id}}",
                 "bracket"
-              ],
+                              ],
               "query": [
                 {
                   "key": "weightClass",
@@ -480,10 +480,10 @@
           },
           "response": [
             {
-              "name": "Bracket Tree",
+              "name": "All Brackets",
               "status": "OK",
               "code": 200,
-              "body": "{\n  \"data\": {\n    \"tournamentId\": 1,\n    \"weightClass\": \"60-65kg\",\n    \"gender\": \"MALE\",\n    \"currentStage\": \"Quarterfinal\",\n    \"bracket\": {\n      \"id\": 7,\n      \"stageName\": \"Final\",\n      \"status\": \"SCHEDULED\",\n      \"bracketPosition\": 7\n    }\n  }\n}"
+              "body": "{\n  \"data\": {\n    \"tournamentId\": 1,\n    \"brackets\": {\n      \"MALE\": {\n        \"Male -58kg\": {\n          \"id\": 7,\n          \"stageName\": \"FINAL\",\n          \"status\": \"SCHEDULED\",\n          \"player1\": { \"id\": 1, \"name\": \"Kim Minjun\" },\n          \"player2\": { \"id\": 3, \"name\": \"Lee Donghyuk\" }\n        },\n        \"Male -68kg\": {\n          \"id\": 10,\n          \"stageName\": \"FINAL\",\n          \"status\": \"SCHEDULED\"\n        }\n      },\n      \"FEMALE\": {\n        \"Female -49kg\": {\n          \"id\": 12,\n          \"stageName\": \"FINAL\",\n          \"status\": \"SCHEDULED\"\n        }\n      }\n    },\n    \"currentStage\": \"QUARTER_FINAL\"\n  }\n}"
             }
           ]
         },

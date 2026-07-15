@@ -25,7 +25,6 @@ async function protect(req, res, next) {
 
     if (decoded.globalRole === 'admin' || decoded.globalRole === 'super_admin') {
       const admin = await User.findByPk(decoded.id);
-      console.log(admin);
       if (!admin || !admin.isActive) {
         return next(ApiErrors.unauthorized('Admin account is inactive or not found.'));
       }

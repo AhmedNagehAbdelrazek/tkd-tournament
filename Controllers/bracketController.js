@@ -7,6 +7,12 @@ const getBracket = async (req, res, next) => {
     const tournamentId = req.params.id;
     const { weightClass, gender } = req.query;
 
+    // ponytail: if no params, return all brackets in one shot
+    if (!weightClass && !gender) {
+      const result = await bracketService.buildAllBrackets(tournamentId);
+      return successResponse(res, result);
+    }
+
     const tree = await bracketService.buildBracketTree(tournamentId, weightClass, gender);
     if (!tree) {
       return successResponse(res, {

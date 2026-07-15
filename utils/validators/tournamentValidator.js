@@ -51,6 +51,14 @@ const createTournamentValidation = [
     .withMessage('endDate is required')
     .isISO8601()
     .withMessage('endDate must be a valid date'),
+  body('clubIds')
+    .optional()
+    .isArray()
+    .withMessage('clubIds must be an array of integers'),
+  body('clubIds.*')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('each clubId must be a positive integer'),
   body('settings')
     .optional()
     .isObject()

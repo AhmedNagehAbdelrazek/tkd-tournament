@@ -1,4 +1,4 @@
-const { Tournament, Match, Player, Club } = require('../Models');
+const { Tournament, Match, Player, Club, TournamentClub } = require('../Models');
 const sequelize = require('../config/database');
 const { ApiErrors } = require('../utils/ApiError');
 const { parsePagination, buildPaginationMeta } = require('../utils/pagination');
@@ -60,13 +60,19 @@ async function create(data, actorId) {
     settings: data.settings,
   });
 
+  // ponytail: register clubs in one shot
+  if (data.clubIds && data.clubIds.length > 0) {
+    const tcData = data.clubIds.map((clubId) => ({ tournamentId: tournament.id, clubId }));
+    await TournamentClub.bulkCreate(tcData);
+  }
+
   if (actorId) {
     logAudit({
       actorId,
       action: AUDIT_ACTIONS.CREATE,
       entityType: AUDIT_ENTITY_TYPES.TOURNAMENT,
       entityId: tournament.id,
-      metadata: { name: tournament.name },
+      metadata: { name: tournament.name, clubIds: data.clubIds || [] },
     });
   }
 
