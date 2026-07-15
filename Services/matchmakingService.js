@@ -1,4 +1,4 @@
-const { Player, Match, Club, Tournament, MatchEvent } = require('../Models');
+const { Player, Match, Club, Tournament, MatchEvent, TournamentClub } = require('../Models');
 const { ApiErrors } = require('../utils/ApiError');
 const { MATCH_STATUS, MATCH_TYPES } = require('../config/constants');
 
@@ -73,11 +73,20 @@ async function generateBracket(data) {
     throw ApiErrors.badRequest(`Weight class "${data.weightClass}" not found in ${data.gender} division`);
   }
 
+  // ponytail: only players from registered clubs
+  const registeredClubs = await TournamentClub.findAll({
+    where: { tournamentId: data.tournamentId },
+    attributes: ['clubId'],
+    raw: true,
+  });
+  const registeredClubIds = registeredClubs.map((rc) => rc.clubId);
+
   const players = await Player.findAll({
     where: {
       tournamentId: data.tournamentId,
       gender: data.gender,
       weight: { [require('sequelize').Op.between]: [weightClass.min, weightClass.max] },
+      ...(registeredClubIds.length > 0 ? { clubId: registeredClubIds } : {}),
     },
     include: [{ model: Club, attributes: ['name'] }],
     order: [['name', 'ASC']],

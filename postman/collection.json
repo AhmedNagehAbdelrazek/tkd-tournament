@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "TKD Tournament API",
-    "description": "Postman collection for the Taekwondo Match Management System\n\nBase URL: {{base_url}}\nAuth: Bearer token via {{auth_token}}\n\nEndpoints:\n- Health: GET /api/healthz\n- Auth: POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me, PATCH /api/auth/me\n- Clubs: GET/POST /api/clubs, GET/PUT/DELETE /api/clubs/:id\n- Tournaments: GET/POST /api/tournaments, GET/PUT/DELETE /api/tournaments/:id, PUT /api/tournaments/:id/settings, POST /api/tournaments/:id/complete, GET /api/tournaments/:id/excluded-players\n- Players: GET/POST /api/players, POST /api/players/bulk, GET/PUT/DELETE /api/players/:id\n- Matches: GET/POST /api/matches, POST /api/matches/generate, POST /api/matches/schedule, PUT /api/matches/:id/reschedule, POST /api/matches/:id/walkover, GET /api/matches/:id\n- Match State: POST /api/matches/:id/start|pause|resume|end|cancel\n- HTTP Fallback Scoring: POST /api/matches/:id/points, POST /api/matches/:id/remove-points, POST /api/matches/:id/end-round\n- Bracket: GET /api/tournaments/:id/bracket, POST /api/tournaments/:id/bracket/override\n- Dashboard: GET /api/dashboard/tournaments, GET /api/dashboard/tournaments/:id/overview\n- User Admin: GET /api/admin/users, PUT /api/admin/users/:id/role, PUT /api/admin/users/:id/deactivate, PUT /api/admin/users/:id/reactivate",
+    "description": "Postman collection for the Taekwondo Match Management System\n\nBase URL: {{base_url}}\nAuth: Bearer token via {{auth_token}}\n\nEndpoints:\n- Health: GET /api/healthz\n- Auth: POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me, PATCH /api/auth/me\n- Clubs: GET/POST /api/clubs, GET/PUT/DELETE /api/clubs/:id, GET /api/clubs/:id/tournaments\n- Tournaments: GET/POST /api/tournaments, GET/PUT/DELETE /api/tournaments/:id, PUT /api/tournaments/:id/settings, POST /api/tournaments/:id/complete, GET /api/tournaments/:id/excluded-players, GET/POST /api/tournaments/:id/clubs, DELETE /api/tournaments/:id/clubs/:clubId\n- Players: GET/POST /api/players, POST /api/players/bulk, GET/PUT/DELETE /api/players/:id\n- Matches: GET/POST /api/matches, POST /api/matches/generate, POST /api/matches/schedule, PUT /api/matches/:id/reschedule, POST /api/matches/:id/walkover, GET /api/matches/:id\n- Match State: POST /api/matches/:id/start|pause|resume|end|cancel\n- HTTP Fallback Scoring: POST /api/matches/:id/points, POST /api/matches/:id/remove-points, POST /api/matches/:id/end-round\n- Bracket: GET /api/tournaments/:id/bracket, POST /api/tournaments/:id/bracket/override\n- Dashboard: GET /api/dashboard/tournaments, GET /api/dashboard/tournaments/:id/overview\n- User Admin: GET /api/admin/users, PUT /api/admin/users/:id/role, PUT /api/admin/users/:id/deactivate, PUT /api/admin/users/:id/reactivate",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -1124,6 +1124,44 @@
               "raw": "{{base_url}}/tournaments/{{tournament_id}}",
               "host": ["{{base_url}}"],
               "path": ["tournaments", "{{tournament_id}}"]
+            }
+          }
+        },
+        {
+          "name": "List Tournament Clubs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}/clubs",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments", "{{tournament_id}}", "clubs"]
+            }
+          }
+        },
+        {
+          "name": "Register Club for Tournament",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clubId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}/clubs",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments", "{{tournament_id}}", "clubs"]
+            }
+          }
+        },
+        {
+          "name": "Deregister Club from Tournament",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}/clubs/{{club_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tournaments", "{{tournament_id}}", "clubs", "{{club_id}}"]
             }
           }
         }

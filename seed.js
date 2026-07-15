@@ -1,7 +1,7 @@
 require('dotenv').config();
 const bcrypt = require('bcrypt');
 const sequelize = require('./config/database');
-const { User, Club, Tournament, Player, Match } = require('./Models');
+const { User, Club, Tournament, Player, Match, TournamentClub } = require('./Models');
 
 const HASH = bcrypt.hashSync('password123', 10);
 
@@ -79,6 +79,11 @@ async function seed() {
 
   const createdTournaments = await Tournament.bulkCreate(tournaments);
   console.log(`  ${createdTournaments.length} tournaments`);
+
+  // ponytail: register clubs for first tournament
+  const tcData = createdClubs.map((club) => ({ tournamentId: createdTournaments[0].id, clubId: club.id }));
+  await TournamentClub.bulkCreate(tcData);
+  console.log(`  ${tcData.length} tournament-club registrations`);
 
   // ponytail: spread players across clubs and tournaments
   const names = [

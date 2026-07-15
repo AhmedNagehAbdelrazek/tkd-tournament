@@ -6,12 +6,16 @@ const Player = require('./Player');
 const Match = require('./Match');
 const MatchEvent = require('./MatchEvent');
 const AuditLog = require('./AuditLog');
+const TournamentClub = require('./TournamentClub');
 
 Club.hasMany(Player, { foreignKey: 'club_id' });
 Player.belongsTo(Club, { foreignKey: 'club_id' });
 
 Tournament.hasMany(Player, { foreignKey: 'tournament_id' });
 Player.belongsTo(Tournament, { foreignKey: 'tournament_id' });
+
+Tournament.belongsToMany(Club, { through: TournamentClub, foreignKey: 'tournament_id' });
+Club.belongsToMany(Tournament, { through: TournamentClub, foreignKey: 'club_id' });
 
 Tournament.hasMany(Match, { foreignKey: 'tournament_id' });
 Match.belongsTo(Tournament, { foreignKey: 'tournament_id' });
@@ -39,4 +43,5 @@ module.exports = {
   Match,
   MatchEvent,
   AuditLog,
+  TournamentClub,
 };
