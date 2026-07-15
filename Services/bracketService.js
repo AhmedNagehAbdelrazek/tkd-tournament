@@ -25,49 +25,63 @@ async function progressWinner(matchId) {
   return { nextMatchId: nextMatch.id, slot: match.nextMatchSlot, winnerId: match.winnerId };
 }
 
-async function buildBracketTree(tournamentId, weightClass, gender) {
-  const where = { tournamentId };
-  if (weightClass) where.weightClass = weightClass;
-  if (gender) {
-    const matches = await Match.findAll({
-      where,
-      include: [
-        { model: Player, as: 'player1', attributes: ['id', 'name'] },
-        { model: Player, as: 'player2', attributes: ['id', 'name'] },
-        { model: Player, as: 'winner', attributes: ['id', 'name'] },
-      ],
-      order: [['bracketPosition', 'ASC']],
-    });
+// ponytail: parse weight class name from tournament settings, or parse "min-max" range
+function resolveWeightRange(tournament, weightClass, gender) {
+  if (!tournament?.settings?.weightClasses) return null;
 
-    const genderMap = {};
-    for (const match of matches) {
-      const p1 = match.player1;
-      const p2 = match.player2;
-      let matchGender = gender;
-      if (p1) matchGender = 'MALE';
-      else if (p2) matchGender = 'FEMALE';
-      else matchGender = gender;
-      if (!genderMap[matchGender]) genderMap[matchGender] = [];
-      genderMap[matchGender].push(match);
-    }
+  // try exact name match in gender-specific classes
+  const genderClasses = tournament.settings.weightClasses[gender] || [];
+  const found = genderClasses.find((wc) => wc.name === weightClass);
+  if (found) return { min: found.min, max: found.max };
 
-    if (!genderMap[gender]) return null;
-
-    const filtered = genderMap[gender];
-    return buildTreeFromMatches(filtered);
+  // ponytail: try all genders if no match in specified gender
+  for (const g of Object.values(tournament.settings.weightClasses)) {
+    const hit = (g || []).find((wc) => wc.name === weightClass);
+    if (hit) return { min: hit.min, max: hit.max };
   }
 
+  // ponytail: parse "min-max" or "min-maxkg" format
+  const m = weightClass.match(/([\d.]+)\s*[-–]\s*([\d.]+)/);
+  if (m) return { min: parseFloat(m[1]), max: parseFloat(m[2]) };
+
+  return null;
+}
+
+async function buildBracketTree(tournamentId, weightClass, gender) {
+  const tournament = await Tournament.findByPk(tournamentId);
+  const range = weightClass ? resolveWeightRange(tournament, weightClass, gender) : null;
+
+  // ponytail: always join players so we can filter by weight range and gender
+  const where = { tournamentId };
   const matches = await Match.findAll({
     where,
     include: [
-      { model: Player, as: 'player1', attributes: ['id', 'name'] },
-      { model: Player, as: 'player2', attributes: ['id', 'name'] },
+      { model: Player, as: 'player1', attributes: ['id', 'name', 'weight', 'gender'] },
+      { model: Player, as: 'player2', attributes: ['id', 'name', 'weight', 'gender'] },
       { model: Player, as: 'winner', attributes: ['id', 'name'] },
     ],
     order: [['bracketPosition', 'ASC']],
   });
 
-  return buildTreeFromMatches(matches);
+  // ponytail: filter by weight range and/or gender in JS — simpler than subquery, few hundred matches max
+  const filtered = matches.filter((m) => {
+    const p1 = m.player1;
+    const p2 = m.player2;
+    const players = [p1, p2].filter(Boolean);
+
+    if (gender) {
+      if (!players.some((p) => p.gender === gender)) return false;
+    }
+
+    if (range) {
+      if (!players.some((p) => p.weight >= range.min && p.weight <= range.max)) return false;
+    }
+
+    return true;
+  });
+
+  if (filtered.length === 0) return null;
+  return buildTreeFromMatches(filtered);
 }
 
 function buildTreeFromMatches(matches) {

@@ -1,8 +1,8 @@
 const { body, query } = require('express-validator');
 
 const getBracketValidation = [
-  query('weightClass').notEmpty().withMessage('weightClass is required'),
-  query('gender').isIn(['MALE', 'FEMALE']).withMessage('gender must be MALE or FEMALE'),
+  query('weightClass').optional().notEmpty().withMessage('weightClass is required'),
+  query('gender').optional().isIn(['MALE', 'FEMALE']).withMessage('gender must be MALE or FEMALE'),
 ];
 
 const overrideValidation = [

@@ -18,9 +18,8 @@ const getBracket = async (req, res, next) => {
       });
     }
 
-    const allMatches = await Match.findAll({
-      where: { tournamentId, weightClass },
-    });
+    // ponytail: gather all matches for stage detection — reuses same filter logic
+    const allMatches = await Match.findAll({ where: { tournamentId } });
     const currentStage = bracketService.determineCurrentStage(allMatches);
 
     successResponse(res, {

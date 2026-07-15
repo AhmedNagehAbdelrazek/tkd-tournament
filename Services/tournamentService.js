@@ -1,4 +1,5 @@
-const { Tournament, Match, Player, Club, sequelize } = require('../Models');
+const { Tournament, Match, Player, Club } = require('../Models');
+const sequelize = require('../config/database');
 const { ApiErrors } = require('../utils/ApiError');
 const { parsePagination, buildPaginationMeta } = require('../utils/pagination');
 const { logAudit, AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } = require('../Services/auditService');

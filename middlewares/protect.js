@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { ApiErrors } = require('../utils/ApiError');
 const { User } = require('../Models');
+const { ROLES } = require('../config/constants');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
@@ -68,10 +69,13 @@ async function tkdProtect(req, res, next) {
 
 function tkdRoleGuard(...allowedRoles) {
   return (req, res, next) => {
-    if (!req.user || !req.user.tkdRole) {
+    if (!req.user || !req.user.globalRole) {
       return next(ApiErrors.unauthorized('TKD authentication required.'));
     }
-    if (!allowedRoles.includes(req.user.tkdRole)) {
+    if([ROLES.ADMIN,ROLES.SUPER_ADMIN].includes(req.user.globalRole)){
+      return next();
+    }
+    if (!allowedRoles.includes(req.user.globalRole)) {
       return next(
         ApiErrors.forbidden('Access denied. You do not have the required TKD role.')
       );
