@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { ApiErrors } = require('../utils/ApiError');
-const Admin = require('../Models/Admin');
+const { User } = require('../Models');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
@@ -23,7 +23,8 @@ async function protect(req, res, next) {
     };
 
     if (decoded.globalRole === 'admin' || decoded.globalRole === 'super_admin') {
-      const admin = await Admin.findByPk(decoded.id);
+      const admin = await User.findByPk(decoded.id);
+      console.log(admin);
       if (!admin || !admin.isActive) {
         return next(ApiErrors.unauthorized('Admin account is inactive or not found.'));
       }
