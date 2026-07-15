@@ -56,8 +56,8 @@ async function buildBracketTree(tournamentId, weightClass, gender) {
   const matches = await Match.findAll({
     where,
     include: [
-      { model: Player, as: 'player1', attributes: ['id', 'name', 'weight', 'gender'] },
-      { model: Player, as: 'player2', attributes: ['id', 'name', 'weight', 'gender'] },
+      { model: Player, as: 'player1', attributes: ['id', 'name', 'weight', 'gender'], include: [{ model: Club, attributes: ['name'] }] },
+      { model: Player, as: 'player2', attributes: ['id', 'name', 'weight', 'gender'], include: [{ model: Club, attributes: ['name'] }] },
       { model: Player, as: 'winner', attributes: ['id', 'name'] },
     ],
     order: [['bracketPosition', 'ASC']],
@@ -93,8 +93,8 @@ async function buildAllBrackets(tournamentId) {
   const allMatches = await Match.findAll({
     where: { tournamentId },
     include: [
-      { model: Player, as: 'player1', attributes: ['id', 'name', 'weight', 'gender'] },
-      { model: Player, as: 'player2', attributes: ['id', 'name', 'weight', 'gender'] },
+      { model: Player, as: 'player1', attributes: ['id', 'name', 'weight', 'gender'], include: [{ model: Club, attributes: ['name'] }] },
+      { model: Player, as: 'player2', attributes: ['id', 'name', 'weight', 'gender'], include: [{ model: Club, attributes: ['name'] }] },
       { model: Player, as: 'winner', attributes: ['id', 'name'] },
     ],
     order: [['bracketPosition', 'ASC']],
@@ -156,17 +156,39 @@ function serializeMatch(m) {
     stageName: m.stageName,
     status: m.status,
     bracketPosition: m.bracketPosition,
+    bracketRound: m.bracketRound,
+    weightClass: m.weightClass,
   };
+
+  // ponytail: player info with club
   if (m.player1) {
     obj.player1 = { id: m.player1.id, name: m.player1.name };
+    if (m.player1.Club) obj.player1.club = m.player1.Club.name;
+  } else {
+    obj.player1 = null;
   }
+
   if (m.player2) {
     obj.player2 = { id: m.player2.id, name: m.player2.name };
+    if (m.player2.Club) obj.player2.club = m.player2.Club.name;
+  } else {
+    obj.player2 = null;
   }
+
+  // ponytail: winner and scores
   if (m.winnerId) obj.winnerId = m.winnerId;
   if (m.winner) {
     obj.winner = { id: m.winner.id, name: m.winner.name };
   }
+  if (m.scorePlayer1 !== undefined) obj.scorePlayer1 = m.scorePlayer1;
+  if (m.scorePlayer2 !== undefined) obj.scorePlayer2 = m.scorePlayer2;
+
+  // ponytail: BYE info
+  if (m.endReason === 'BYE') {
+    obj.isBye = true;
+    obj.endReason = 'BYE';
+  }
+
   return obj;
 }
 
