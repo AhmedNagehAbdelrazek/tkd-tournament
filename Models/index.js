@@ -1,3 +1,4 @@
+const sequelize = require('../config/database');
 const User = require('./User');
 const UploadedImage = require('./UploadedImage');
 const Tournament = require('./Tournament');
@@ -42,6 +43,7 @@ User.hasMany(AuditLog, { foreignKey: 'actor_id' });
 AuditLog.belongsTo(User, { as: 'actor', foreignKey: 'actor_id' });
 
 module.exports = {
+  sequelize,
   User,
   UploadedImage,
   Tournament,

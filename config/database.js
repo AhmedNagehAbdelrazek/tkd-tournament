@@ -1,6 +1,5 @@
 const { Sequelize } = require('sequelize');
 const config = require('./config');
-const { execSync } = require('child_process');
 
 const environment = process.env.NODE_ENV || 'development';
 const dbConfig = config[environment];
@@ -39,28 +38,12 @@ async function validateDatabase() {
 
   try {
     await sequelize.authenticate();
-    await sequelize.sync({
-      force:false,
-      alter:true,
-    });
+    if (process.env.NODE_ENV === 'test') {
+      await sequelize.sync();
+    }
     console.log('Connection to database established successfully.');
   } catch (error) {
     console.error('Unable to connect to the database:', error);
-  }
-}
-
-/**
- * Run Sequelize migrations using CLI.
- * Requires .sequelizerc to be present.
- */
-async function runMigrations() {
-  try {
-    console.log('Running database migrations...');
-    execSync('npx sequelize-cli db:migrate', { stdio: 'pipe' });
-    console.log('Migrations completed.');
-  } catch (err) {
-    console.error('Migration failed:', err);
-    throw err;
   }
 }
 
@@ -77,7 +60,8 @@ async function initDatabase({ runMigrations: doRun = true } = {}) {
   }
 
   if (doRun) {
-    // await runMigrations();
+    const { runMigrations } = require('../migrations');
+    await runMigrations();
   }
 
   return sequelize;

@@ -22,7 +22,7 @@ Club.init(
     updatedAt: {
       type: DataTypes.DATE,
       field: 'updatedat',
-    },
+    }
   },
   {
     sequelize,
