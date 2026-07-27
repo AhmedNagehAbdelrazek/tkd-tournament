@@ -13,10 +13,10 @@ describe('Bracket Contract Tests', () => {
   let clubId, tournamentId, playerId1, playerId2;
 
   beforeAll(async () => {
-    const clubRes = await agent.post('/api/clubs').set(adminHeaders()).send({ name: 'Bracket Contract Club' });
+    const clubRes = await agent.post('/api/v1/clubs').set(adminHeaders()).send({ name: 'Bracket Contract Club' });
     if (clubRes.status === 201) clubId = clubRes.body.id;
 
-    const tournamentRes = await agent.post('/api/tournaments').set(adminHeaders()).send({
+    const tournamentRes = await agent.post('/api/v1/tournaments').set(adminHeaders()).send({
       name: 'Bracket Contract Tournament',
       startDate: '2026-09-01', endDate: '2026-09-03',
       settings: {
@@ -28,12 +28,12 @@ describe('Bracket Contract Tests', () => {
     if (tournamentRes.status === 201) tournamentId = tournamentRes.body.id;
 
     if (clubId && tournamentId) {
-      const p1 = await agent.post('/api/players').set(adminHeaders()).send({
+      const p1 = await agent.post('/api/v1/players').set(adminHeaders()).send({
         name: 'Contract P1', dob: '2000-01-01', weight: 62, gender: 'MALE', clubId, tournamentId,
       });
       if (p1.status === 201) playerId1 = p1.body.id;
 
-      const p2 = await agent.post('/api/players').set(adminHeaders()).send({
+      const p2 = await agent.post('/api/v1/players').set(adminHeaders()).send({
         name: 'Contract P2', dob: '2000-02-02', weight: 63, gender: 'MALE', clubId, tournamentId,
       });
       if (p2.status === 201) playerId2 = p2.body.id;
@@ -43,7 +43,7 @@ describe('Bracket Contract Tests', () => {
   it('bracket response matches contract shape', async () => {
     if (!tournamentId) return;
 
-    const res = await agent.get(`/api/tournaments/${tournamentId}/bracket`)
+    const res = await agent.get(`/api/v1/tournaments/${tournamentId}/bracket`)
       .set(adminHeaders())
       .query({ weightClass: '60-65kg', gender: 'MALE' });
 
@@ -74,7 +74,7 @@ describe('Bracket Contract Tests', () => {
   });
 
   it('error response matches contract shape for missing params', async () => {
-    const res = await agent.get(`/api/tournaments/1/bracket`)
+    const res = await agent.get(`/api/v1/tournaments/1/bracket`)
       .set(adminHeaders())
       .query({});
 

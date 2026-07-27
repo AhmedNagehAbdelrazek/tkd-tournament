@@ -1,6 +1,6 @@
 const { Club, Player } = require('../Models');
 const { ApiErrors } = require('../utils/ApiError');
-const { parsePagination, buildPaginationMeta } = require('../utils/pagination');
+const { parsePagination, buildPaginatedResponse } = require('../utils/pagination');
 const { logAudit, AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } = require('../Services/auditService');
 const { Op } = require('sequelize');
 
@@ -98,7 +98,7 @@ async function remove(id, actorId) {
 }
 
 async function list(query = {}) {
-  const { page, limit, offset } = parsePagination(query);
+  const { page, limit, offset, pageSize } = parsePagination(query);
   const where = {};
 
   if (query.search) {
@@ -107,21 +107,12 @@ async function list(query = {}) {
 
   const { rows, count } = await Club.findAndCountAll({
     where,
-    attributes: {
-      include: [
-        [
-          require('sequelize').literal('(SELECT COUNT(*) FROM players WHERE players.club_id = "Club".id)'),
-          'playerCount',
-        ],
-      ],
-    },
     order: [['name', 'ASC']],
     limit,
     offset,
   });
 
-  const meta = buildPaginationMeta(count, page, limit);
-  return { data: rows, meta };
+  return buildPaginatedResponse(rows, count, page, pageSize);
 }
 
 module.exports = { create, list, getById, update, remove };

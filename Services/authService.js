@@ -8,19 +8,20 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 const JWT_EXPIRY = '24h';
 const SALT_ROUNDS = 12;
 
-async function signup({ email, password, name }) {
+async function signup({ email, password, name, fullName, role }) {
   const existing = await User.findOne({ where: { email } });
   if (existing) {
     throw ApiErrors.conflict('Email is already registered');
   }
 
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+  const displayName = fullName || name;
 
   const user = await User.create({
     email,
     password: hashedPassword,
-    name,
-    role: 'customer',
+    name: displayName,
+    role: role || 'coach',
   });
 
   const token = jwt.sign(
@@ -29,16 +30,16 @@ async function signup({ email, password, name }) {
     { expiresIn: JWT_EXPIRY }
   );
 
-  auditService.logAudit('CREATE', 'user', user.id, user.email, `Customer signed up: ${user.email}`);
+  auditService.logAudit('CREATE', 'user', user.id, user.email, `User registered: ${user.email}`);
 
   return {
-    token,
     user: {
-      id: user.id,
+      id: String(user.id),
+      fullName: user.name,
       email: user.email,
-      name: user.name,
       role: user.role,
     },
+    token,
   };
 }
 
@@ -53,24 +54,22 @@ async function login({ email, password }) {
     throw ApiErrors.unauthorized('Invalid email or password');
   }
 
-  // ponytail: one JWT with both roles — null tkdRole for global users
   const token = jwt.sign(
     { id: user.id, email: user.email, globalRole: user.role},
     JWT_SECRET,
     { expiresIn: JWT_EXPIRY }
   );
 
-  auditService.logAudit('LOGIN', 'user', user.id, user.email, `Customer logged in: ${user.email}`);
+  auditService.logAudit('LOGIN', 'user', user.id, user.email, `User logged in: ${user.email}`);
 
   return {
-    token,
     user: {
-      id: user.id,
+      id: String(user.id),
+      fullName: user.name,
       email: user.email,
-      name: user.name,
       role: user.role,
-      tkdRole: user.tkdRole || null,
     },
+    token,
   };
 }
 

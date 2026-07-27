@@ -3,8 +3,8 @@ const { successResponse, paginatedResponse } = require('../utils/httpResponse');
 
 const create = async (req, res, next) => {
   try {
-    const player = await playerService.create(req.body, req.user?.id);
-    successResponse(res, player, 201);
+    const players = await playerService.create(req.body, req.user?.id);
+    successResponse(res, players, 201);
   } catch (err) { next(err); }
 };
 
@@ -38,8 +38,8 @@ const remove = async (req, res, next) => {
 
 const list = async (req, res, next) => {
   try {
-    const { data, meta } = await playerService.list(req.query);
-    paginatedResponse(res, data, meta);
+    const result = await playerService.list(req.query);
+    paginatedResponse(res, result.data, result.totalCount, result.page, result.pageSize);
   } catch (err) { next(err); }
 };
 

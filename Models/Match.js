@@ -1,6 +1,6 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const { MATCH_STATUS, MATCH_TYPES } = require('../config/constants');
+const { MATCH_TYPES } = require('../config/constants');
 
 class Match extends Model {}
 
@@ -15,6 +15,11 @@ Match.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       field: 'tournament_id',
+    },
+    categoryId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'category_id',
     },
     type: {
       type: DataTypes.ENUM(Object.values(MATCH_TYPES)),
@@ -42,9 +47,9 @@ Match.init(
       field: 'end_time',
     },
     status: {
-      type: DataTypes.ENUM(Object.values(MATCH_STATUS)),
+      type: DataTypes.ENUM('SCHEDULED', 'PRE_MATCH', 'IN_PROGRESS', 'PAUSED', 'ROUND_END', 'FINISHED', 'MATCH_END', 'CANCELLED'),
       allowNull: false,
-      defaultValue: MATCH_STATUS.SCHEDULED,
+      defaultValue: 'SCHEDULED',
     },
     winnerId: {
       type: DataTypes.INTEGER,
@@ -56,6 +61,12 @@ Match.init(
       allowNull: false,
       defaultValue: 1,
       field: 'current_round',
+    },
+    totalRounds: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 3,
+      field: 'total_rounds',
     },
     intraClubWarning: {
       type: DataTypes.BOOLEAN,
@@ -114,6 +125,71 @@ Match.init(
       ),
       allowNull: true,
       field: 'end_reason',
+    },
+    hongScore: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      field: 'hong_score',
+    },
+    chungScore: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      field: 'chung_score',
+    },
+    hongPenalties: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      field: 'hong_penalties',
+    },
+    chungPenalties: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      field: 'chung_penalties',
+    },
+    hongInjured: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'hong_injured',
+    },
+    chungInjured: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'chung_injured',
+    },
+    hongExcluded: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'hong_excluded',
+    },
+    chungExcluded: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'chung_excluded',
+    },
+    timerStartTime: {
+      type: DataTypes.BIGINT,
+      allowNull: true,
+      field: 'timer_start_time',
+    },
+    accumulatedPausedTime: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+      defaultValue: 0,
+      field: 'accumulated_paused_time',
+    },
+    roundDurationSeconds: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 120,
+      field: 'round_duration_seconds',
     },
     createdAt: {
       type: DataTypes.DATE,

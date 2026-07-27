@@ -1,9 +1,8 @@
-const { Tournament, Match, Player, Club, TournamentClub } = require('../Models');
+const { Tournament, Match, Player, Club, TournamentClub, Category } = require('../Models');
 const sequelize = require('../config/database');
 const { ApiErrors } = require('../utils/ApiError');
-const { parsePagination, buildPaginationMeta } = require('../utils/pagination');
+const { parsePagination, buildPaginatedResponse } = require('../utils/pagination');
 const { logAudit, AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } = require('../Services/auditService');
-const { MATCH_STATUS } = require('../config/constants');
 const { Op } = require('sequelize');
 
 function buildExclusionReason(player, tournament) {
@@ -13,6 +12,35 @@ function buildExclusionReason(player, tournament) {
   }
   const rangeList = genderClasses.map((wc) => wc.name).join(', ');
   return `No ${player.gender} weight class matches ${parseFloat(player.weight)}kg — available ranges: ${rangeList}`;
+}
+
+function computeTournamentStatus(tournament) {
+  const now = new Date();
+  if (tournament.isCompleted) return 'completed';
+  const start = new Date(tournament.startDate);
+  const end = new Date(tournament.endDate);
+  if (now < start) return 'upcoming';
+  if (now > end) return 'completed';
+  return 'ongoing';
+}
+
+async function buildTournamentResponse(tournament, categoryRecords) {
+  const categories = categoryRecords || await Category.findAll({ where: { tournamentId: tournament.id } });
+  const playerCount = await Player.count({ where: { tournamentId: tournament.id } });
+  const matchCount = await Match.count({ where: { tournamentId: tournament.id } });
+  const bracketDepth = categories.length > 0 ? categories[0].bracketDepth : null;
+
+  return {
+    id: String(tournament.id),
+    name: tournament.name,
+    status: computeTournamentStatus(tournament),
+    startDate: tournament.startDate,
+    endDate: tournament.endDate,
+    categories: categories.map(c => String(c.id)),
+    bracketDepth,
+    registeredPlayers: playerCount,
+    matchesPlayed: matchCount,
+  };
 }
 
 async function findExcludedPlayers(tournamentId) {
@@ -57,13 +85,78 @@ async function create(data, actorId) {
     name: data.name,
     startDate: data.startDate,
     endDate: data.endDate,
-    settings: data.settings,
+    settings: data.settings || {},
   });
 
-  // ponytail: register clubs in one shot
-  if (data.clubIds && data.clubIds.length > 0) {
-    const tcData = data.clubIds.map((clubId) => ({ tournamentId: tournament.id, clubId }));
+  const clubIds = data.clubs || data.clubIds || [];
+  if (clubIds.length > 0) {
+    const tcData = clubIds.map((clubId) => ({ tournamentId: tournament.id, clubId: parseInt(clubId) || clubId }));
     await TournamentClub.bulkCreate(tcData);
+  }
+
+  if (data.categories) {
+    const categories = data.categories;
+    const gender = categories.gender || 'Both';
+    const bracketDepth = categories.bracketDepth || 4;
+    const weights = categories.weights || {};
+    const categoryRecords = [];
+
+    if (gender === 'Male' || gender === 'Both') {
+      const males = weights.males || [];
+      for (const wc of males) {
+        const cat = await Category.create({
+          name: wc.name,
+          tournamentId: tournament.id,
+          bracketDepth,
+          gender: 'MALE',
+          minWeight: wc.minWeight,
+          maxWeight: wc.maxWeight,
+        });
+        categoryRecords.push(cat);
+      }
+    }
+
+    if (gender === 'Female' || gender === 'Both') {
+      const females = weights.females || [];
+      for (const wc of females) {
+        const cat = await Category.create({
+          name: wc.name,
+          tournamentId: tournament.id,
+          bracketDepth,
+          gender: 'FEMALE',
+          minWeight: wc.minWeight,
+          maxWeight: wc.maxWeight,
+        });
+        categoryRecords.push(cat);
+      }
+    }
+
+    if (!tournament.settings.weightClasses) {
+      tournament.settings.weightClasses = {};
+    }
+    if (gender === 'Male' || gender === 'Both') {
+      tournament.settings.weightClasses.MALE = (weights.males || []).map(w => ({
+        name: w.name, min: w.minWeight, max: w.maxWeight,
+      }));
+    }
+    if (gender === 'Female' || gender === 'Both') {
+      tournament.settings.weightClasses.FEMALE = (weights.females || []).map(w => ({
+        name: w.name, min: w.minWeight, max: w.maxWeight,
+      }));
+    }
+    await tournament.update({ settings: tournament.settings });
+
+    if (actorId) {
+      logAudit({
+        actorId,
+        action: AUDIT_ACTIONS.CREATE,
+        entityType: AUDIT_ENTITY_TYPES.TOURNAMENT,
+        entityId: tournament.id,
+        metadata: { name: tournament.name, clubIds, categoriesCount: categoryRecords.length },
+      });
+    }
+
+    return buildTournamentResponse(tournament, categoryRecords);
   }
 
   if (actorId) {
@@ -72,15 +165,11 @@ async function create(data, actorId) {
       action: AUDIT_ACTIONS.CREATE,
       entityType: AUDIT_ENTITY_TYPES.TOURNAMENT,
       entityId: tournament.id,
-      metadata: { name: tournament.name, clubIds: data.clubIds || [] },
+      metadata: { name: tournament.name, clubIds },
     });
   }
 
-  const excludedPlayers = await findExcludedPlayers(tournament.id);
-  return {
-    ...tournament.toJSON(),
-    excludedPlayers,
-  };
+  return buildTournamentResponse(tournament);
 }
 
 async function getById(id) {
@@ -88,26 +177,7 @@ async function getById(id) {
   if (!tournament) {
     throw ApiErrors.notFound('Tournament not found');
   }
-  const playerCount = await tournament.countPlayers();
-  const matchCount = await Match.count({ where: { tournamentId: id } });
-
-  const statusCounts = await Match.findAll({
-    where: { tournamentId: id },
-    attributes: ['status', [sequelize.fn('COUNT', sequelize.col('status')), 'count']],
-    group: ['status'],
-    raw: true,
-  });
-  const matchesByStatus = {};
-  for (const row of statusCounts) {
-    matchesByStatus[row.status] = parseInt(row.count, 10);
-  }
-
-  return {
-    ...tournament.toJSON(),
-    playerCount,
-    matchCount,
-    matchesByStatus,
-  };
+  return buildTournamentResponse(tournament);
 }
 
 async function update(id, data, actorId) {
@@ -119,12 +189,54 @@ async function update(id, data, actorId) {
     throw ApiErrors.badRequest('Cannot modify a completed tournament');
   }
 
-  const previous = { name: tournament.name, startDate: tournament.startDate, endDate: tournament.endDate };
+  const previous = { name: tournament.name, startDate: tournament.startDate, endDate: tournament.endDate, categories: data.categories };
+  const datesOrCategoriesChanged = (
+    (data.startDate && data.startDate !== String(tournament.startDate)) ||
+    (data.endDate && data.endDate !== String(tournament.endDate)) ||
+    data.categories
+  );
+
   await tournament.update({
     ...(data.name !== undefined && { name: data.name }),
     ...(data.startDate !== undefined && { startDate: data.startDate }),
     ...(data.endDate !== undefined && { endDate: data.endDate }),
   });
+
+  if (data.categories) {
+    await Category.destroy({ where: { tournamentId: id } });
+    const categories = data.categories;
+    const gender = categories.gender || 'Both';
+    const bracketDepth = categories.bracketDepth || 4;
+    const weights = categories.weights || {};
+
+    if (gender === 'Male' || gender === 'Both') {
+      for (const wc of (weights.males || [])) {
+        await Category.create({
+          name: wc.name, tournamentId: id, bracketDepth, gender: 'MALE', minWeight: wc.minWeight, maxWeight: wc.maxWeight,
+        });
+      }
+    }
+    if (gender === 'Female' || gender === 'Both') {
+      for (const wc of (weights.females || [])) {
+        await Category.create({
+          name: wc.name, tournamentId: id, bracketDepth, gender: 'FEMALE', minWeight: wc.minWeight, maxWeight: wc.maxWeight,
+        });
+      }
+    }
+
+    if (!tournament.settings.weightClasses) tournament.settings.weightClasses = {};
+    if (gender === 'Male' || gender === 'Both') {
+      tournament.settings.weightClasses.MALE = (weights.males || []).map(w => ({ name: w.name, min: w.minWeight, max: w.maxWeight }));
+    }
+    if (gender === 'Female' || gender === 'Both') {
+      tournament.settings.weightClasses.FEMALE = (weights.females || []).map(w => ({ name: w.name, min: w.minWeight, max: w.maxWeight }));
+    }
+    await tournament.update({ settings: tournament.settings });
+  }
+
+  if (datesOrCategoriesChanged) {
+    await Match.destroy({ where: { tournamentId: id } });
+  }
 
   if (actorId) {
     logAudit({
@@ -132,11 +244,11 @@ async function update(id, data, actorId) {
       action: AUDIT_ACTIONS.UPDATE,
       entityType: AUDIT_ENTITY_TYPES.TOURNAMENT,
       entityId: tournament.id,
-      metadata: { previous, updates: data },
+      metadata: { previous, updates: data, bracketRegenerated: datesOrCategoriesChanged },
     });
   }
 
-  return getById(id);
+  return buildTournamentResponse(tournament);
 }
 
 async function updateSettings(id, settings, actorId) {
@@ -220,38 +332,41 @@ async function remove(id, actorId) {
       metadata: { name: tournamentName },
     });
   }
-
-  return { message: 'Tournament deleted successfully' };
 }
 
 async function list(query = {}) {
-  const { page, limit, offset } = parsePagination(query);
+  const { page, limit, offset, pageSize } = parsePagination(query);
   const where = {};
 
-  if (query.completed !== undefined) {
-    where.isCompleted = query.completed === 'true';
-  }
   if (query.search) {
     where.name = { [Op.iLike]: `%${query.search}%` };
   }
 
-  const { rows, count } = await Tournament.findAndCountAll({
+  let tournaments = await Tournament.findAll({
     where,
     order: [['createdat', 'DESC']],
     limit,
     offset,
   });
 
+  if (query.status) {
+    tournaments = tournaments.filter(t => computeTournamentStatus(t) === query.status);
+  }
+
   const tournamentsWithCounts = await Promise.all(
-    rows.map(async (t) => {
-      const playerCount = await t.countPlayers();
+    tournaments.map(async (t) => {
+      const playerCount = await Player.count({ where: { tournamentId: t.id } });
       const matchCount = await Match.count({ where: { tournamentId: t.id } });
-      return { ...t.toJSON(), playerCount, matchCount };
+      return {
+        ...t.toJSON(),
+        status: computeTournamentStatus(t),
+        playerCount,
+        matchCount,
+      };
     })
   );
 
-  const meta = buildPaginationMeta(count, page, limit);
-  return { data: tournamentsWithCounts, meta };
+  return buildPaginatedResponse(tournamentsWithCounts, tournamentsWithCounts.length, page, pageSize);
 }
 
 async function getTournamentOverview(id) {
@@ -279,7 +394,7 @@ async function getTournamentOverview(id) {
   const upcomingMatches = await Match.count({
     where: {
       tournamentId: id,
-      status: MATCH_STATUS.SCHEDULED,
+      status: 'SCHEDULED',
       scheduledTime: { [Op.between]: [now, oneHourFromNow] },
     },
   });
@@ -296,12 +411,9 @@ async function getTournamentOverview(id) {
 }
 
 async function getTournamentList(query = {}) {
-  const { page, limit, offset } = parsePagination(query);
+  const { page, limit, offset, pageSize } = parsePagination(query);
   const where = {};
 
-  if (query.completed !== undefined) {
-    where.isCompleted = query.completed === 'true';
-  }
   if (query.search) {
     where.name = { [Op.iLike]: `%${query.search}%` };
   }
@@ -315,31 +427,19 @@ async function getTournamentList(query = {}) {
 
   const tournamentsWithCounts = await Promise.all(
     rows.map(async (t) => {
-      const playerCount = await t.countPlayers();
+      const playerCount = await Player.count({ where: { tournamentId: t.id } });
       const matchCount = await Match.count({ where: { tournamentId: t.id } });
-
-      const statusCounts = await Match.findAll({
-        where: { tournamentId: t.id },
-        attributes: ['status', [sequelize.fn('COUNT', sequelize.col('status')), 'count']],
-        group: ['status'],
-        raw: true,
-      });
-      const matchesByStatus = {};
-      for (const row of statusCounts) {
-        matchesByStatus[row.status] = parseInt(row.count, 10);
-      }
 
       return {
         ...t.toJSON(),
+        status: computeTournamentStatus(t),
         playerCount,
         matchCount,
-        matchesByStatus,
       };
     })
   );
 
-  const meta = buildPaginationMeta(count, page, limit);
-  return { data: tournamentsWithCounts, meta };
+  return buildPaginatedResponse(tournamentsWithCounts, count, page, pageSize);
 }
 
 module.exports = {
@@ -355,4 +455,6 @@ module.exports = {
   hasInProgressMatches,
   getTournamentOverview,
   getTournamentList,
+  computeTournamentStatus,
+  buildTournamentResponse,
 };

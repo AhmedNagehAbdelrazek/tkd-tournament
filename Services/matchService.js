@@ -1,25 +1,10 @@
-const { Match, Player, MatchEvent, Tournament } = require('../Models');
+const { Match, Player, MatchEvent, Tournament, Club } = require('../Models');
 const { ApiErrors } = require('../utils/ApiError');
-const { MATCH_STATUS, MATCH_EVENT_TYPES, END_REASONS, AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } = require('../config/constants');
 const { progressWinner } = require('./bracketService');
-const { parsePagination, buildPaginationMeta } = require('../utils/pagination');
+const { parsePagination, buildPaginatedResponse } = require('../utils/pagination');
 const { logAudit } = require('../Services/auditService');
+const { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } = require('../config/constants');
 const { Op } = require('sequelize');
-
-const validTransitions = {
-  [MATCH_STATUS.SCHEDULED]: [MATCH_STATUS.IN_PROGRESS, MATCH_STATUS.CANCELLED],
-  [MATCH_STATUS.IN_PROGRESS]: [MATCH_STATUS.PAUSED, MATCH_STATUS.FINISHED, MATCH_STATUS.CANCELLED],
-  [MATCH_STATUS.PAUSED]: [MATCH_STATUS.IN_PROGRESS],
-  [MATCH_STATUS.FINISHED]: [],
-  [MATCH_STATUS.CANCELLED]: [],
-};
-
-function validateTransition(currentStatus, targetStatus) {
-  const allowed = validTransitions[currentStatus];
-  if (!allowed || !allowed.includes(targetStatus)) {
-    throw ApiErrors.conflict('Invalid state transition');
-  }
-}
 
 async function checkConflictWindow(tournamentId, player1Id, player2Id, scheduledTime, excludeMatchId = null) {
   const tournament = await Tournament.findByPk(tournamentId);
@@ -37,7 +22,7 @@ async function checkConflictWindow(tournamentId, player1Id, player2Id, scheduled
   const playerIds = [player1Id, player2Id];
   const where = {
     tournamentId,
-    status: { [Op.in]: [MATCH_STATUS.SCHEDULED, MATCH_STATUS.IN_PROGRESS] },
+    status: { [Op.in]: ['SCHEDULED', 'IN_PROGRESS'] },
     scheduledTime: { [Op.between]: [windowStart, windowEnd] },
     [Op.or]: [
       { player1Id: { [Op.in]: playerIds } },
@@ -55,54 +40,74 @@ async function checkConflictWindow(tournamentId, player1Id, player2Id, scheduled
 async function startMatch(matchId) {
   const match = await Match.findByPk(matchId);
   if (!match) throw ApiErrors.notFound('Match not found');
-  validateTransition(match.status, MATCH_STATUS.IN_PROGRESS);
-  match.status = MATCH_STATUS.IN_PROGRESS;
+  match.status = 'IN_PROGRESS';
   match.currentRound = 1;
+  match.timerStartTime = Date.now();
+  match.hongScore = 0;
+  match.chungScore = 0;
+  match.scorePlayer1 = 0;
+  match.scorePlayer2 = 0;
   await match.save();
-  await MatchEvent.create({ matchId: match.id, type: MATCH_EVENT_TYPES.START, roundNumber: 1 });
-  return { id: match.id, status: match.status, startedAt: new Date(), currentRound: match.currentRound };
+  await MatchEvent.create({ matchId: match.id, type: 'START', roundNumber: 1 });
+  return { id: String(match.id), status: match.status, startedAt: new Date(), currentRound: match.currentRound };
 }
 
 async function pauseMatch(matchId) {
   const match = await Match.findByPk(matchId);
   if (!match) throw ApiErrors.notFound('Match not found');
-  validateTransition(match.status, MATCH_STATUS.PAUSED);
-  match.status = MATCH_STATUS.PAUSED;
+  if (match.timerStartTime) {
+    match.accumulatedPausedTime += (Date.now() - match.timerStartTime);
+  }
+  match.timerStartTime = null;
+  match.status = 'PAUSED';
   await match.save();
-  await MatchEvent.create({ matchId: match.id, type: MATCH_EVENT_TYPES.PAUSE, roundNumber: match.currentRound });
-  return { id: match.id, status: match.status, pausedAt: new Date() };
+  await MatchEvent.create({ matchId: match.id, type: 'PAUSE', roundNumber: match.currentRound });
+  return { id: String(match.id), status: match.status, pausedAt: new Date() };
 }
 
 async function resumeMatch(matchId) {
   const match = await Match.findByPk(matchId);
   if (!match) throw ApiErrors.notFound('Match not found');
-  validateTransition(match.status, MATCH_STATUS.IN_PROGRESS);
-  match.status = MATCH_STATUS.IN_PROGRESS;
+  match.timerStartTime = Date.now();
+  match.status = 'IN_PROGRESS';
   await match.save();
-  await MatchEvent.create({ matchId: match.id, type: MATCH_EVENT_TYPES.RESUME, roundNumber: match.currentRound });
-  return { id: match.id, status: match.status, resumedAt: new Date() };
+  await MatchEvent.create({ matchId: match.id, type: 'RESUME', roundNumber: match.currentRound });
+  return { id: String(match.id), status: match.status, resumedAt: new Date() };
 }
 
 async function endMatch(matchId, winnerId, endReason) {
   const match = await Match.findByPk(matchId);
   if (!match) throw ApiErrors.notFound('Match not found');
-  validateTransition(match.status, MATCH_STATUS.FINISHED);
+
+  if (match.timerStartTime) {
+    match.accumulatedPausedTime += (Date.now() - match.timerStartTime);
+  }
+  match.timerStartTime = null;
+
   if (winnerId && winnerId !== match.player1Id && winnerId !== match.player2Id) {
     throw ApiErrors.badRequest('Winner must be one of the match players');
   }
-  match.status = MATCH_STATUS.FINISHED;
+
+  if (!winnerId) {
+    const hongS = match.hongScore || match.scorePlayer1 || 0;
+    const chungS = match.chungScore || match.scorePlayer2 || 0;
+    if (hongS > chungS) winnerId = match.player1Id;
+    else if (chungS > hongS) winnerId = match.player2Id;
+  }
+
+  match.status = 'MATCH_END';
   match.winnerId = winnerId || null;
   match.endTime = new Date();
   if (endReason) match.endReason = endReason;
   await match.save();
   await MatchEvent.create({
     matchId: match.id,
-    type: MATCH_EVENT_TYPES.FINISHED,
+    type: 'FINISHED',
     roundNumber: match.currentRound,
     metadata: {
       winner: winnerId,
       endReason,
-      finalScore: { player1: match.scorePlayer1, player2: match.scorePlayer2 }
+      finalScore: { hong: match.hongScore || match.scorePlayer1, chung: match.chungScore || match.scorePlayer2 }
     }
   });
 
@@ -114,10 +119,10 @@ async function endMatch(matchId, winnerId, endReason) {
   }
 
   return {
-    id: match.id, tournamentId: match.tournamentId, status: match.status,
-    winnerId: match.winnerId, endTime: match.endTime,
+    id: String(match.id), tournamentId: match.tournamentId, status: match.status,
+    winnerId: match.winnerId ? String(match.winnerId) : null, endTime: match.endTime,
     weightClass: match.weightClass,
-    finalScore: { player1: match.scorePlayer1, player2: match.scorePlayer2 },
+    finalScore: { hong: match.hongScore || match.scorePlayer1, chung: match.chungScore || match.scorePlayer2 },
     progression
   };
 }
@@ -125,15 +130,14 @@ async function endMatch(matchId, winnerId, endReason) {
 async function cancelMatch(matchId, cancelledByRole) {
   const match = await Match.findByPk(matchId);
   if (!match) throw ApiErrors.notFound('Match not found');
-  validateTransition(match.status, MATCH_STATUS.CANCELLED);
-  if (match.status === MATCH_STATUS.IN_PROGRESS && cancelledByRole !== 'ADMIN')
+  if (match.status === 'IN_PROGRESS' && cancelledByRole !== 'ADMIN')
     throw ApiErrors.forbidden('Only Admins can cancel ongoing matches');
-  if (match.status === MATCH_STATUS.SCHEDULED && cancelledByRole === 'SCOREKEEPER')
+  if (match.status === 'SCHEDULED' && cancelledByRole === 'SCOREKEEPER')
     throw ApiErrors.forbidden('Scorekeepers cannot cancel matches');
-  match.status = MATCH_STATUS.CANCELLED;
+  match.status = 'CANCELLED';
   await match.save();
-  await MatchEvent.create({ matchId: match.id, type: MATCH_EVENT_TYPES.CANCEL, roundNumber: match.currentRound });
-  return { id: match.id, status: match.status, cancelledAt: new Date() };
+  await MatchEvent.create({ matchId: match.id, type: 'CANCEL', roundNumber: match.currentRound });
+  return { id: String(match.id), status: match.status, cancelledAt: new Date() };
 }
 
 async function getMatchState(matchId) {
@@ -145,39 +149,84 @@ async function getMatchState(matchId) {
     ],
   });
   if (!match) throw ApiErrors.notFound('Match not found');
-  return match;
+
+  return {
+    id: String(match.id),
+    status: match.status,
+    player1: match.player1 ? { id: String(match.player1.id), name: match.player1.name } : null,
+    player2: match.player2 ? { id: String(match.player2.id), name: match.player2.name } : null,
+    winnerId: match.winnerId ? String(match.winnerId) : null,
+    score: { player1: match.scorePlayer1 || match.hongScore || 0, player2: match.scorePlayer2 || match.chungScore || 0 },
+    currentRound: match.currentRound,
+    scheduledTime: match.scheduledTime,
+  };
 }
 
 async function list(query = {}) {
-  const { page, limit, offset } = parsePagination(query);
+  const { page, limit, offset, pageSize } = parsePagination(query);
   const where = {};
 
   if (query.tournamentId) {
     where.tournamentId = query.tournamentId;
   }
   if (query.status) {
-    where.status = query.status;
+    const statusMap = { PENDING: 'SCHEDULED', IN_PROGRESS: 'IN_PROGRESS', COMPLETED: 'FINISHED' };
+    where.status = statusMap[query.status] || query.status;
   }
   if (query.weightClass) {
     where.weightClass = query.weightClass;
   }
-  if (query.bracketRound) {
-    where.bracketRound = query.bracketRound;
+  if (query.bracketRound || query.round) {
+    where.bracketRound = query.bracketRound || query.round;
+  }
+  if (query.startDate || query.endDate) {
+    where.scheduledTime = {};
+    if (query.startDate) where.scheduledTime[Op.gte] = new Date(query.startDate);
+    if (query.endDate) where.scheduledTime[Op.lte] = new Date(query.endDate);
+  }
+
+  const playerInclude = [
+    { model: Player, as: 'player1', attributes: ['id', 'name'], include: [{ model: Club, attributes: ['name'] }] },
+    { model: Player, as: 'player2', attributes: ['id', 'name'], include: [{ model: Club, attributes: ['name'] }] },
+  ];
+
+  if (query.playerSearch) {
+    playerInclude[0].where = {
+      [Op.or]: [
+        { name: { [Op.iLike]: `%${query.playerSearch}%` } },
+      ],
+    };
   }
 
   const { rows, count } = await Match.findAndCountAll({
     where,
     order: [['scheduledTime', 'ASC']],
     include: [
-      { model: Player, as: 'player1', attributes: ['id', 'name'] },
-      { model: Player, as: 'player2', attributes: ['id', 'name'] },
+      ...playerInclude,
+      { model: Player, as: 'winner', attributes: ['id', 'name'], required: false },
+      { model: Tournament, attributes: ['id', 'name'], required: false },
     ],
     limit,
     offset,
   });
 
-  const meta = buildPaginationMeta(count, page, limit);
-  return { data: rows, meta };
+  const data = rows.map(m => {
+    const statusMapReverse = { SCHEDULED: 'PENDING', IN_PROGRESS: 'IN_PROGRESS', FINISHED: 'COMPLETED' };
+    return {
+      id: String(m.id),
+      tournamentId: String(m.tournamentId),
+      tournamentName: m.Tournament?.name || null,
+      categoryName: m.weightClass || null,
+      round: m.bracketRound || 1,
+      player1: m.player1 ? { id: String(m.player1.id), name: m.player1.name, clubName: m.player1.Club?.name || null } : null,
+      player2: m.player2 ? { id: String(m.player2.id), name: m.player2.name, clubName: m.player2.Club?.name || null } : null,
+      winner: m.winner ? { id: String(m.winner.id), name: m.winner.name } : null,
+      status: statusMapReverse[m.status] || m.status,
+      scheduledAt: m.scheduledTime,
+    };
+  });
+
+  return buildPaginatedResponse(data, count, page, pageSize);
 }
 
 async function schedule(data, actorId) {
@@ -208,7 +257,11 @@ async function schedule(data, actorId) {
     scheduledTime: new Date(scheduledTime),
     type: type || 'FRIENDLY',
     weightClass: weightClass || null,
-    status: MATCH_STATUS.SCHEDULED,
+    status: 'SCHEDULED',
+    hongScore: 0,
+    chungScore: 0,
+    scorePlayer1: 0,
+    scorePlayer2: 0,
   });
 
   if (actorId) {
@@ -229,7 +282,9 @@ async function reschedule(id, scheduledTime, actorId) {
   if (!match) {
     throw ApiErrors.notFound('Match not found');
   }
-  validateTransition(match.status, MATCH_STATUS.SCHEDULED);
+  if (match.status !== 'SCHEDULED') {
+    throw ApiErrors.conflict('Can only reschedule SCHEDULED matches');
+  }
 
   const conflicts = await checkConflictWindow(
     match.tournamentId,
@@ -264,7 +319,7 @@ async function walkover(id, winnerId, actorId) {
     throw ApiErrors.notFound('Match not found');
   }
 
-  if (match.status !== MATCH_STATUS.SCHEDULED && match.status !== MATCH_STATUS.IN_PROGRESS) {
+  if (match.status !== 'SCHEDULED' && match.status !== 'IN_PROGRESS') {
     throw ApiErrors.badRequest('Walkover can only be assigned to scheduled or in-progress matches');
   }
 
@@ -279,5 +334,4 @@ module.exports = {
   startMatch, pauseMatch, resumeMatch,
   endMatch, cancelMatch, getMatchState, list,
   schedule, reschedule, walkover,
-  validTransitions, validateTransition,
 };

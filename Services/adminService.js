@@ -1,14 +1,14 @@
 const { User, Match } = require('../Models');
 const { ApiErrors } = require('../utils/ApiError');
-const { parsePagination, buildPaginationMeta } = require('../utils/pagination');
+const { parsePagination, buildPaginatedResponse } = require('../utils/pagination');
 const { logAudit, AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } = require('../Services/auditService');
-const { MATCH_STATUS, ROLES } = require('../config/constants');
+const { ROLES } = require('../config/constants');
 const { Op } = require('sequelize');
 
 const TKD_ROLES = ['ADMIN', 'HEAD_JUDGE', 'MAT_JUDGE', 'SCOREKEEPER'];
 
 async function listUsers(query = {}) {
-  const { page, limit, offset } = parsePagination(query);
+  const { page, limit, offset, pageSize } = parsePagination(query);
   const where = {};
 
   if (query.search) {
@@ -32,8 +32,7 @@ async function listUsers(query = {}) {
     offset,
   });
 
-  const meta = buildPaginationMeta(count, page, limit);
-  return { data: rows, meta };
+  return buildPaginatedResponse(rows, count, page, pageSize);
 }
 
 async function assignRole(userId, tkdRole, actorId) {
@@ -76,7 +75,7 @@ async function deactivateUser(userId, actorId) {
 
   const activeJudgingMatch = await Match.findOne({
     where: {
-      status: { [Op.in]: [MATCH_STATUS.SCHEDULED, MATCH_STATUS.IN_PROGRESS] },
+      status: { [Op.in]: ['SCHEDULED', 'IN_PROGRESS'] },
       [Op.or]: [
         { player1Id: userId },
         { player2Id: userId },

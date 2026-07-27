@@ -1,6 +1,5 @@
 const router = require('express').Router();
 const c = require('../Controllers/authController');
-const protect = require('../middlewares/protect');
 const validate = require('../middlewares/validatorMiddleware');
 const { body } = require('express-validator');
 
@@ -9,10 +8,13 @@ const loginValidation = [
   body('password').notEmpty().withMessage('Password required'),
 ];
 
-// ponytail: one login endpoint — role checks live in route guards, not here
-router.post('/signup', c.signup);
+// --- IN DOC ---
+router.post('/register', c.signup);
 router.post('/login', loginValidation, validate, c.login);
-router.get('/me', protect, c.me);
-router.patch('/me', protect, c.updateProfile);
+
+// --- NOT IN DOC (commented out, maybe use later) ---
+// router.post('/signup', c.signup);
+// router.get('/me', protect, c.me);
+// router.patch('/me', protect, c.updateProfile);
 
 module.exports = router;

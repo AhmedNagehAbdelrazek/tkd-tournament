@@ -38,15 +38,15 @@ const markComplete = async (req, res, next) => {
 
 const remove = async (req, res, next) => {
   try {
-    const result = await tournamentService.remove(req.params.id, req.user?.id);
-    successResponse(res, result);
+    await tournamentService.remove(req.params.id, req.user?.id);
+    res.status(204).send();
   } catch (err) { next(err); }
 };
 
 const list = async (req, res, next) => {
   try {
-    const { data, meta } = await tournamentService.list(req.query);
-    paginatedResponse(res, data, meta);
+    const result = await tournamentService.list(req.query);
+    paginatedResponse(res, result.data, result.totalCount, result.page, result.pageSize);
   } catch (err) { next(err); }
 };
 
@@ -66,8 +66,8 @@ const getOverview = async (req, res, next) => {
 
 const getTournamentList = async (req, res, next) => {
   try {
-    const { data, meta } = await tournamentService.getTournamentList(req.query);
-    paginatedResponse(res, data, meta);
+    const result = await tournamentService.getTournamentList(req.query);
+    paginatedResponse(res, result.data, result.totalCount, result.page, result.pageSize);
   } catch (err) { next(err); }
 };
 

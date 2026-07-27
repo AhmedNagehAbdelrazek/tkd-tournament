@@ -2,10 +2,12 @@ function successResponse(res, data, statusCode = 200) {
   return res.status(statusCode).json(data);
 }
 
-function paginatedResponse(res, data, meta) {
+function paginatedResponse(res, data, totalCount, page, pageSize) {
   return res.status(200).json({
     data,
-    meta,
+    totalCount,
+    page,
+    pageSize,
   });
 }
 

@@ -65,8 +65,8 @@ const getById = async (req, res, next) => {
 
 const list = async (req, res, next) => {
   try {
-    const { data, meta } = await matchService.list(req.query);
-    paginatedResponse(res, data, meta);
+    const result = await matchService.list(req.query);
+    paginatedResponse(res, result.data, result.totalCount, result.page, result.pageSize);
   } catch (err) { next(err); }
 };
 

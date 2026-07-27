@@ -31,8 +31,8 @@ const remove = async (req, res, next) => {
 
 const list = async (req, res, next) => {
   try {
-    const { data, meta } = await clubService.list(req.query);
-    paginatedResponse(res, data, meta);
+    const result = await clubService.list(req.query);
+    paginatedResponse(res, result.data, result.totalCount, result.page, result.pageSize);
   } catch (err) { next(err); }
 };
 

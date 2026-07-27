@@ -1,13 +1,12 @@
 const { Match, Player, Club, Tournament, MatchEvent } = require('../Models');
 const { ApiErrors } = require('../utils/ApiError');
-const { MATCH_STATUS, MATCH_EVENT_TYPES, END_REASONS } = require('../config/constants');
 const { Op } = require('sequelize');
 
 async function progressWinner(matchId) {
   const match = await Match.findByPk(matchId);
   if (!match) throw ApiErrors.notFound('Match not found');
-  if (match.status !== MATCH_STATUS.FINISHED) throw ApiErrors.conflict('Match must be FINISHED to progress winner');
-  if (match.status === MATCH_STATUS.CANCELLED) return null;
+  if (match.status !== 'FINISHED') throw ApiErrors.conflict('Match must be FINISHED to progress winner');
+  if (match.status === 'CANCELLED') return null;
 
   if (!match.nextMatchId) return null;
 
@@ -189,7 +188,7 @@ function determineCurrentRound(matches) {
   let currentRound = null;
   for (const m of matches) {
     const round = m.bracketRound || 1;
-    const hasActive = m.status === MATCH_STATUS.IN_PROGRESS || m.status === MATCH_STATUS.SCHEDULED;
+    const hasActive = m.status === 'IN_PROGRESS' || m.status === 'SCHEDULED';
     if (hasActive) {
       if (!currentRound || round > currentRound) currentRound = round;
     }
@@ -201,7 +200,7 @@ function determineCurrentRound(matches) {
 async function overrideNextMatchSlot(matchId, playerId) {
   const match = await Match.findByPk(matchId);
   if (!match) throw ApiErrors.notFound('Match not found');
-  if (match.status === MATCH_STATUS.FINISHED) {
+  if (match.status === 'FINISHED') {
     throw ApiErrors.conflict('Cannot override: target match is already finished');
   }
   if (!match.nextMatchId) {

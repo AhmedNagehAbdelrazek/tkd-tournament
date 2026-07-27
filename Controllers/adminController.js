@@ -3,8 +3,8 @@ const { successResponse, paginatedResponse } = require('../utils/httpResponse');
 
 const listUsers = async (req, res, next) => {
   try {
-    const { data, meta } = await adminService.listUsers(req.query);
-    paginatedResponse(res, data, meta);
+    const result = await adminService.listUsers(req.query);
+    paginatedResponse(res, result.data, result.totalCount, result.page, result.pageSize);
   } catch (err) { next(err); }
 };
 

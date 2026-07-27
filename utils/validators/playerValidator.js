@@ -1,40 +1,66 @@
 const { body, param } = require('express-validator');
 
 const createPlayerValidation = [
-  body('name')
-    .notEmpty()
-    .withMessage('Player name is required')
+  body()
+    .isArray()
+    .withMessage('Body must be an array of player objects'),
+  body('*.fullName')
+    .optional()
     .isString()
-    .withMessage('Player name must be a string'),
-  body('dob')
-    .notEmpty()
-    .withMessage('Date of birth is required')
-    .isISO8601()
-    .withMessage('dob must be a valid date'),
-  body('weight')
-    .notEmpty()
-    .withMessage('Weight is required')
-    .isFloat({ min: 0 })
-    .withMessage('Weight must be a positive number'),
-  body('gender')
+    .withMessage('fullName must be a string'),
+  body('*.name')
+    .optional()
+    .isString()
+    .withMessage('name must be a string'),
+  body('*.nationalId')
+    .optional()
+    .isString()
+    .withMessage('nationalId must be a string'),
+  body('*.gender')
     .notEmpty()
     .withMessage('Gender is required')
     .isIn(['MALE', 'FEMALE'])
     .withMessage('Gender must be MALE or FEMALE'),
-  body('clubId')
-    .notEmpty()
-    .withMessage('clubId is required')
+  body('*.weightKg')
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage('Weight must be a positive number'),
+  body('*.weight')
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage('Weight must be a positive number'),
+  body('*.club')
+    .optional()
+    .isObject()
+    .withMessage('club must be an object with id and name'),
+  body('*.club.id')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('club.id must be a positive integer'),
+  body('*.clubId')
+    .optional()
     .isInt({ min: 1 })
     .withMessage('clubId must be a positive integer'),
-  body('tournamentId')
-    .notEmpty()
-    .withMessage('tournamentId is required')
+  body('*.dateOfBirth')
+    .optional()
+    .isISO8601()
+    .withMessage('dateOfBirth must be a valid date'),
+  body('*.dob')
+    .optional()
+    .isISO8601()
+    .withMessage('dob must be a valid date'),
+  body('*.imageUrl')
+    .optional()
+    .isString()
+    .withMessage('imageUrl must be a string'),
+  body('*.birthCertificateUrl')
+    .optional()
+    .isString()
+    .withMessage('birthCertificateUrl must be a string'),
+  body('*.tournamentId')
+    .optional()
     .isInt({ min: 1 })
     .withMessage('tournamentId must be a positive integer'),
-  body('photoUrl')
-    .optional()
-    .isURL()
-    .withMessage('photoUrl must be a valid URL'),
 ];
 
 const bulkCreatePlayerValidation = [

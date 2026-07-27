@@ -68,13 +68,13 @@ async function tkdProtect(req, res, next) {
 
 function tkdRoleGuard(...allowedRoles) {
   return (req, res, next) => {
-    if (!req.user || !req.user.globalRole) {
+    if (!req.user) {
       return next(ApiErrors.unauthorized('TKD authentication required.'));
     }
-    if([ROLES.ADMIN,ROLES.SUPER_ADMIN].includes(req.user.globalRole)){
+    if ([ROLES.ADMIN, ROLES.SUPER_ADMIN].includes(req.user.globalRole)) {
       return next();
     }
-    if (!allowedRoles.includes(req.user.globalRole)) {
+    if (!allowedRoles.includes(req.user.tkdRole)) {
       return next(
         ApiErrors.forbidden('Access denied. You do not have the required TKD role.')
       );

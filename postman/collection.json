@@ -1,13 +1,13 @@
 {
   "info": {
     "name": "TKD Tournament API",
-    "description": "Postman collection for the Taekwondo Match Management System\n\nBase URL: {{base_url}}\nAuth: Bearer token via {{auth_token}}\n\nEndpoints:\n- Health: GET /api/healthz\n- Auth: POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me, PATCH /api/auth/me\n- Clubs: GET/POST /api/clubs, GET/PUT/DELETE /api/clubs/:id, GET /api/clubs/:id/tournaments\n- Tournaments: GET/POST /api/tournaments, GET/PUT/DELETE /api/tournaments/:id, PUT /api/tournaments/:id/settings, POST /api/tournaments/:id/complete, GET /api/tournaments/:id/excluded-players, GET/POST /api/tournaments/:id/clubs, DELETE /api/tournaments/:id/clubs/:clubId\n- Players: GET/POST /api/players, POST /api/players/bulk, GET/PUT/DELETE /api/players/:id\n- Matches: GET/POST /api/matches, POST /api/matches/generate, POST /api/matches/schedule, PUT /api/matches/:id/reschedule, POST /api/matches/:id/walkover, GET /api/matches/:id\n- Match State: POST /api/matches/:id/start|pause|resume|end|cancel\n- HTTP Fallback Scoring: POST /api/matches/:id/points, POST /api/matches/:id/remove-points, POST /api/matches/:id/end-round\n- Bracket: GET /api/tournaments/:id/bracket (returns all brackets), POST /api/tournaments/:id/bracket/override\n- Dashboard: GET /api/dashboard/tournaments, GET /api/dashboard/tournaments/:id/overview\n- User Admin: GET /api/admin/users, PUT /api/admin/users/:id/role, PUT /api/admin/users/:id/deactivate, PUT /api/admin/users/:id/reactivate\n\nTournament Creation: POST /api/tournaments accepts optional clubIds array to register clubs in one request.",
+    "description": "Postman collection for the Meedan TKD Tournament Management System\n\nBase URL: {{base_url}}\nAuth: Bearer token via {{auth_token}}\n\nDocumented Endpoints:\n- Auth: POST /auth/register, POST /auth/login\n- Tournaments: GET/POST /tournaments, GET/PUT/DELETE /tournaments/:id\n- Categories: GET /categories/:categoryId\n- Players: GET/POST /players\n- Clubs: GET/POST /clubs\n- Matches: GET /matches\n- Live Matches: GET /matches/:matchId/live, POST /matches/:matchId/live/action|points|points/undo|penalty|injury|exclude, GET /matches/:matchId/suggestions",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:3000/api"
+      "value": "http://localhost:3000/api/v1"
     },
     {
       "key": "auth_token",
@@ -28,6 +28,10 @@
     {
       "key": "match_id",
       "value": ""
+    },
+    {
+      "key": "category_id",
+      "value": ""
     }
   ],
   "auth": {
@@ -44,6 +48,66 @@
     {
       "name": "Auth",
       "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "  pm.collectionVariables.set('auth_token', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Coach Ahmed\",\n  \"email\": \"coach@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"coach\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Register Success (201)",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{base_url}}/auth/register"
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"user\": {\n    \"id\": \"507f1f77bcf86cd799439011\",\n    \"fullName\": \"Coach Ahmed\",\n    \"email\": \"coach@example.com\",\n    \"role\": \"coach\"\n  },\n  \"token\": \"eyJhbGciOiJIUzI1NiIs...\"\n}"
+            }
+          ]
+        },
         {
           "name": "Login",
           "event": [
@@ -70,7 +134,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\"\n}"
+              "raw": "{\n  \"email\": \"coach@example.com\",\n  \"password\": \"password123\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/login",
@@ -85,7 +149,7 @@
           },
           "response": [
             {
-              "name": "Login Success",
+              "name": "Login Success (200)",
               "originalRequest": {
                 "method": "POST",
                 "url": {
@@ -100,12 +164,60 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIs...\",\n  \"user\": {\n    \"id\": 1,\n    \"name\": \"Admin User\",\n    \"email\": \"admin@example.com\",\n    \"role\": \"admin\",\n    \"tkdRole\": null\n  }\n}"
+              "body": "{\n  \"user\": {\n    \"id\": \"507f1f77bcf86cd799439011\",\n    \"fullName\": \"Coach Ahmed\",\n    \"email\": \"coach@example.com\",\n    \"role\": \"coach\"\n  },\n  \"token\": \"eyJhbGciOiJIUzI1NiIs...\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tournaments",
+      "item": [
+        {
+          "name": "List Tournaments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/tournaments?page=1&pageSize=20&status=upcoming&search=summer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tournaments"
+              ],
+              "query": [
+                { "key": "page", "value": "1", "description": "1-indexed" },
+                { "key": "pageSize", "value": "20" },
+                { "key": "status", "value": "upcoming", "description": "upcoming | ongoing | completed", "disabled": true },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Tournament List (200)",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": [...],\n  \"totalCount\": 5,\n  \"page\": 1,\n  \"pageSize\": 20\n}"
             }
           ]
         },
         {
-          "name": "Signup",
+          "name": "Create Tournament",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "  pm.collectionVariables.set('tournament_id', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -116,56 +228,55 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"password123\"\n}"
+              "raw": "{\n  \"name\": \"Summer Championship 2026\",\n  \"startDate\": \"2026-08-01T09:00:00.000Z\",\n  \"endDate\": \"2026-08-03T18:00:00.000Z\",\n  \"clubs\": [\"club_id_1\", \"club_id_2\"],\n  \"categories\": {\n    \"gender\": \"Both\",\n    \"bracketDepth\": 3,\n    \"weights\": {\n      \"males\": [\n        { \"name\": \"Male -58kg\", \"minWeight\": 0, \"maxWeight\": 58 },\n        { \"name\": \"Male -68kg\", \"minWeight\": 58.01, \"maxWeight\": 68 }\n      ],\n      \"females\": [\n        { \"name\": \"Female -49kg\", \"minWeight\": 0, \"maxWeight\": 49 },\n        { \"name\": \"Female -57kg\", \"minWeight\": 49.01, \"maxWeight\": 57 }\n      ]\n    }\n  }\n}"
             },
             "url": {
-              "raw": "{{base_url}}/auth/signup",
+              "raw": "{{base_url}}/tournaments",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
-                "auth",
-                "signup"
+                "tournaments"
               ]
             }
           },
           "response": [
             {
-              "name": "Signup Success",
+              "name": "Tournament Created (201)",
               "status": "Created",
               "code": 201,
-              "body": "{\n  \"id\": 2,\n  \"email\": \"newuser@example.com\",\n  \"role\": \"customer\"\n}"
+              "body": "{\n  \"id\": \"...\",\n  \"name\": \"Summer Championship 2026\",\n  \"startDate\": \"2026-08-01T09:00:00.000Z\",\n  \"endDate\": \"2026-08-03T18:00:00.000Z\",\n  \"status\": \"upcoming\",\n  \"categories\": [\"cat_id_1\", \"cat_id_2\"],\n  \"bracketDepth\": 3,\n  \"registeredPlayers\": 0,\n  \"matchesPlayed\": 0\n}"
             }
           ]
         },
         {
-          "name": "Get Profile",
+          "name": "Get Tournament By ID",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{base_url}}/auth/me",
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
-                "auth",
-                "me"
+                "tournaments",
+                "{{tournament_id}}"
               ]
             }
           },
           "response": [
             {
-              "name": "Profile",
+              "name": "Tournament Details (200)",
               "status": "OK",
               "code": 200,
-              "body": "{\n  \"id\": 1,\n  \"email\": \"admin@example.com\",\n  \"name\": \"Admin User\",\n  \"role\": \"admin\"\n}"
+              "body": "{\n  \"id\": \"...\",\n  \"name\": \"Summer Championship 2026\",\n  \"status\": \"upcoming\",\n  \"startDate\": \"2026-08-01T09:00:00.000Z\",\n  \"endDate\": \"2026-08-03T18:00:00.000Z\",\n  \"categories\": [\"cat_id_1\", \"cat_id_2\"],\n  \"bracketDepth\": 3,\n  \"registeredPlayers\": 10,\n  \"matchesPlayed\": 0\n}"
             }
           ]
         },
         {
-          "name": "Update Profile",
+          "name": "Update Tournament",
           "request": {
-            "method": "PATCH",
+            "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
@@ -174,53 +285,161 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Name\"\n}"
+              "raw": "{\n  \"name\": \"Updated Tournament Name\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/auth/me",
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
-                "auth",
-                "me"
+                "tournaments",
+                "{{tournament_id}}"
               ]
             }
           },
           "response": [
             {
-              "name": "Profile Updated",
+              "name": "Tournament Updated (200)",
               "status": "OK",
               "code": 200,
-              "body": "{\n  \"id\": 1,\n  \"email\": \"admin@example.com\",\n  \"name\": \"Updated Name\"\n}"
+              "body": "{\n  \"id\": \"...\",\n  \"name\": \"Updated Tournament Name\",\n  \"status\": \"upcoming\",\n  \"startDate\": \"2026-08-01T09:00:00.000Z\",\n  \"endDate\": \"2026-08-03T18:00:00.000Z\",\n  \"categories\": [\"cat_id_1\", \"cat_id_2\"],\n  \"bracketDepth\": 3,\n  \"registeredPlayers\": 10,\n  \"matchesPlayed\": 0\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Tournament",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/tournaments/{{tournament_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tournaments",
+                "{{tournament_id}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Tournament Deleted (204)",
+              "status": "No Content",
+              "code": 204
             }
           ]
         }
       ]
     },
     {
-      "name": "Health",
+      "name": "Categories",
       "item": [
         {
-          "name": "Health Check",
+          "name": "Get Category By ID",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{base_url}}/healthz",
+              "raw": "{{base_url}}/categories/{{category_id}}",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
-                "healthz"
+                "categories",
+                "{{category_id}}"
               ]
             }
           },
           "response": [
             {
-              "name": "Healthy",
+              "name": "Category Details (200)",
               "status": "OK",
               "code": 200,
-              "body": "{\n  \"status\": \"ok\"\n}"
+              "body": "{\n  \"id\": \"...\",\n  \"name\": \"Male -58kg\",\n  \"bracketDepth\": 3,\n  \"matches\": [\n    {\n      \"id\": \"match_1\",\n      \"round\": 1,\n      \"player1\": { \"id\": \"p1\", \"fullName\": \"Kim Minjun\" },\n      \"player2\": { \"id\": \"p2\", \"fullName\": \"Lee Donghyuk\" },\n      \"winner\": null,\n      \"nextMatchId\": \"match_2\"\n    },\n    {\n      \"id\": \"match_2\",\n      \"round\": 2,\n      \"player1\": null,\n      \"player2\": null,\n      \"winner\": null,\n      \"nextMatchId\": null\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Players",
+      "item": [
+        {
+          "name": "List Players",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/players?page=1&pageSize=20&gender=Male&search=ahmed",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ],
+              "query": [
+                { "key": "page", "value": "1", "description": "1-indexed" },
+                { "key": "pageSize", "value": "20" },
+                { "key": "search", "value": "", "description": "Searches name, club, nationalId", "disabled": true },
+                { "key": "gender", "value": "Male", "description": "Male | Female", "disabled": true },
+                { "key": "clubName", "value": "", "disabled": true },
+                { "key": "sortBy", "value": "", "disabled": true },
+                { "key": "sortOrder", "value": "asc", "description": "asc | desc", "disabled": true }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Players List (200)",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"...\",\n      \"fullName\": \"Ahmed Ali\",\n      \"nationalId\": \"29001011234567\",\n      \"gender\": \"MALE\",\n      \"weightKg\": 62.5,\n      \"dateOfBirth\": \"2001-01-15T00:00:00.000Z\",\n      \"imageUrl\": null,\n      \"birthCertificateUrl\": null,\n      \"club\": { \"id\": \"club_1\", \"name\": \"Cairo Tigers\" }\n    }\n  ],\n  \"totalCount\": 1,\n  \"page\": 1,\n  \"pageSize\": 20\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register Players (Array)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (Array.isArray(jsonData) && jsonData.length > 0 && jsonData[0].id) {",
+                  "  pm.collectionVariables.set('player_id', jsonData[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"fullName\": \"Ahmed Ali\",\n    \"nationalId\": \"29001011234567\",\n    \"gender\": \"Male\",\n    \"weightKg\": 62.5,\n    \"club\": { \"id\": \"club_1\", \"name\": \"Cairo Tigers\" },\n    \"dateOfBirth\": \"2001-01-15T00:00:00.000Z\",\n    \"imageUrl\": null,\n    \"birthCertificateUrl\": null\n  }\n]"
+            },
+            "url": {
+              "raw": "{{base_url}}/players",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "players"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Players Created (201)",
+              "status": "Created",
+              "code": 201,
+              "body": "[\n  {\n    \"id\": \"...\",\n    \"fullName\": \"Ahmed Ali\",\n    \"nationalId\": \"29001011234567\",\n    \"gender\": \"MALE\",\n    \"weightKg\": 62.5,\n    \"dateOfBirth\": \"2001-01-15T00:00:00.000Z\",\n    \"imageUrl\": null,\n    \"birthCertificateUrl\": null,\n    \"club\": { \"id\": \"club_1\", \"name\": \"Cairo Tigers\" }\n  }\n]"
             }
           ]
         }
@@ -230,7 +449,49 @@
       "name": "Clubs",
       "item": [
         {
+          "name": "List Clubs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/clubs?page=1&pageSize=20&search=dragon",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clubs"
+              ],
+              "query": [
+                { "key": "page", "value": "1", "description": "1-indexed" },
+                { "key": "pageSize", "value": "20" },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Clubs List (200)",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": [\n    { \"id\": \"club_1\", \"name\": \"Dragon TKD Club\" }\n  ],\n  \"totalCount\": 1,\n  \"page\": 1,\n  \"pageSize\": 20\n}"
+            }
+          ]
+        },
+        {
           "name": "Create Club",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "  pm.collectionVariables.set('club_id', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -255,372 +516,10 @@
           },
           "response": [
             {
-              "name": "Club Created",
+              "name": "Club Created (201)",
               "status": "Created",
               "code": 201,
-              "body": "{\n  \"id\": 1,\n  \"name\": \"Dragon TKD Club\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "List Clubs",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/clubs",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "clubs"
-              ]
-            }
-          },
-          "response": [
-            {
-              "name": "Clubs List",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"clubs\": [\n    {\n      \"id\": 1,\n      \"name\": \"Dragon TKD Club\",\n      \"playerCount\": 5\n    }\n  ]\n}"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Tournaments",
-      "item": [
-        {
-          "name": "Create Tournament",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "var jsonData = pm.response.json();",
-                  "if (jsonData.data && jsonData.data.id) {",
-                  "  pm.collectionVariables.set('tournament_id', jsonData.data.id);",
-                  "} else if (jsonData.id) {",
-                  "  pm.collectionVariables.set('tournament_id', jsonData.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Summer Championship 2026\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-03\",\n  \"clubIds\": [1, 2, 3],\n  \"settings\": {\n    \"roundDurationSec\": 120,\n    \"restBetweenRoundsSec\": 60,\n    \"restBetweenMatchesMin\": 15,\n    \"pointGapAutoEnd\": 20,\n    \"weightClasses\": {\n      \"MALE\": [\n        { \"name\": \"Male -58kg\", \"min\": 0, \"max\": 58 },\n        { \"name\": \"Male -68kg\", \"min\": 58.01, \"max\": 68 }\n      ],\n      \"FEMALE\": [\n        { \"name\": \"Female -49kg\", \"min\": 0, \"max\": 49 },\n        { \"name\": \"Female -57kg\", \"min\": 49.01, \"max\": 57 }\n      ]\n    }\n  }\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/tournaments",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "tournaments"
-              ]
-            }
-          },
-          "response": [
-            {
-              "name": "Tournament Created",
-              "status": "Created",
-              "code": 201,
-              "body": "{\n  \"id\": 1,\n  \"name\": \"Summer Championship 2026\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-03\",\n  \"settings\": {\n    \"weightClasses\": {\n      \"MALE\": [\n        { \"name\": \"Male -58kg\", \"min\": 0, \"max\": 58 },\n        { \"name\": \"Male -68kg\", \"min\": 58.01, \"max\": 68 }\n      ],\n      \"FEMALE\": [\n        { \"name\": \"Female -49kg\", \"min\": 0, \"max\": 49 },\n        { \"name\": \"Female -57kg\", \"min\": 49.01, \"max\": 57 }\n      ]\n    },\n    \"pointGapAutoEnd\": 20\n  },\n  \"isCompleted\": false,\n  \"excludedPlayers\": []\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get Tournament By ID",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/tournaments/{{tournament_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "tournaments",
-                "{{tournament_id}}"
-              ]
-            }
-          },
-          "response": [
-            {
-              "name": "Tournament Details",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"id\": 1,\n  \"name\": \"Summer Championship 2026\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-03\",\n  \"settings\": {...},\n  \"isCompleted\": false,\n  \"playerCount\": 10,\n  \"matchCount\": 5\n}"
-            }
-          ]
-        },
-        {
-          "name": "List Tournaments",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/tournaments",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "tournaments"
-              ]
-            }
-          },
-          "response": [
-            {
-              "name": "Tournament List",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"tournaments\": [...],\n  \"total\": 1\n}"
-            }
-          ]
-        },
-        {
-          "name": "Update Tournament Settings",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"weightClasses\": {\n    \"MALE\": [\n      { \"name\": \"Male -58kg\", \"min\": 0, \"max\": 58 },\n      { \"name\": \"Male -74kg\", \"min\": 58.01, \"max\": 74 }\n    ],\n    \"FEMALE\": [\n      { \"name\": \"Female -49kg\", \"min\": 0, \"max\": 49 }\n    ]\n  }\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/tournaments/{{tournament_id}}/settings",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "tournaments",
-                "{{tournament_id}}",
-                "settings"
-              ]
-            }
-          },
-          "response": [
-            {
-              "name": "Settings Updated",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Summer Championship 2026\",\n    \"settings\": {\n      \"weightClasses\": {\n        \"MALE\": [\n          { \"name\": \"Male -58kg\", \"min\": 0, \"max\": 58 },\n          { \"name\": \"Male -74kg\", \"min\": 58.01, \"max\": 74 }\n        ],\n        \"FEMALE\": [\n          { \"name\": \"Female -49kg\", \"min\": 0, \"max\": 49 }\n        ]\n      }\n    },\n    \"excludedPlayers\": []\n  }\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get Excluded Players",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/tournaments/{{tournament_id}}/excluded-players",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "tournaments",
-                "{{tournament_id}}",
-                "excluded-players"
-              ]
-            }
-          },
-          "response": [
-            {
-              "name": "Excluded Players List",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"data\": {\n    \"excludedPlayers\": [\n      {\n        \"id\": 5,\n        \"name\": \"Ahmed Ali\",\n        \"gender\": \"MALE\",\n        \"weight\": 85,\n        \"clubName\": \"Cairo Tigers\",\n        \"reason\": \"No MALE weight class matches 85kg — available ranges: Male -58kg, Male -68kg\"\n      }\n    ],\n    \"total\": 1\n  }\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get Bracket Tree",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/tournaments/{{tournament_id}}/bracket",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "tournaments",
-                "{{tournament_id}}",
-                "bracket"
-                              ],
-              "query": [
-                {
-                  "key": "weightClass",
-                  "value": "60-65kg"
-                },
-                {
-                  "key": "gender",
-                  "value": "MALE"
-                }
-              ]
-            }
-          },
-          "response": [
-            {
-              "name": "All Brackets",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"data\": {\n    \"tournamentId\": 1,\n    \"brackets\": {\n      \"MALE\": {\n        \"Male -58kg\": {\n          \"id\": 7,\n          \"stageName\": \"FINAL\",\n          \"status\": \"SCHEDULED\",\n          \"player1\": { \"id\": 1, \"name\": \"Kim Minjun\" },\n          \"player2\": { \"id\": 3, \"name\": \"Lee Donghyuk\" }\n        },\n        \"Male -68kg\": {\n          \"id\": 10,\n          \"stageName\": \"FINAL\",\n          \"status\": \"SCHEDULED\"\n        }\n      },\n      \"FEMALE\": {\n        \"Female -49kg\": {\n          \"id\": 12,\n          \"stageName\": \"FINAL\",\n          \"status\": \"SCHEDULED\"\n        }\n      }\n    },\n    \"currentStage\": \"QUARTER_FINAL\"\n  }\n}"
-            }
-          ]
-        },
-        {
-          "name": "Override Match Slot",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"matchId\": 1,\n  \"playerId\": 1\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/tournaments/{{tournament_id}}/bracket/override",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "tournaments",
-                "{{tournament_id}}",
-                "bracket",
-                "override"
-              ]
-            }
-          },
-          "response": [
-            {
-              "name": "Slot Overridden",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"data\": {\n    \"nextMatchId\": 3,\n    \"slot\": \"PLAYER1\",\n    \"playerId\": 1\n  }\n}"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Players",
-      "item": [
-        {
-          "name": "Register Player",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"tournamentId\": {{tournament_id}},\n  \"name\": \"John Doe\",\n  \"dob\": \"2010-05-15\",\n  \"weight\": 12.5,\n  \"gender\": \"MALE\",\n  \"clubId\": {{club_id}}\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/players",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "players"
-              ]
-            }
-          },
-          "response": [
-            {
-              "name": "Player Created",
-              "status": "Created",
-              "code": 201,
-              "body": "{\n  \"id\": 1,\n  \"name\": \"John Doe\",\n  \"dob\": \"2010-05-15\",\n  \"age\": 16,\n  \"yearOfBirth\": 2010,\n  \"weight\": 12.5,\n  \"gender\": \"MALE\",\n  \"clubId\": 1,\n  \"clubName\": \"Dragon TKD Club\",\n  \"tournamentId\": 1,\n  \"photoUrl\": null\n}"
-            }
-          ]
-        },
-        {
-          "name": "Bulk Register Players",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"tournamentId\": {{tournament_id}},\n  \"players\": [\n    {\n      \"name\": \"Jane Doe\",\n      \"dob\": \"2011-03-20\",\n      \"weight\": 11.0,\n      \"gender\": \"FEMALE\",\n      \"clubId\": {{club_id}}\n    },\n    {\n      \"name\": \"Bob Smith\",\n      \"dob\": \"2009-11-10\",\n      \"weight\": 14.0,\n      \"gender\": \"MALE\",\n      \"clubId\": {{club_id}}\n    }\n  ]\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/players/bulk",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "players",
-                "bulk"
-              ]
-            }
-          },
-          "response": [
-            {
-              "name": "Bulk Created",
-              "status": "Created",
-              "code": 201,
-              "body": "{\n  \"created\": 2,\n  \"errors\": []\n}"
-            }
-          ]
-        },
-        {
-          "name": "List Players",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/players?tournamentId={{tournament_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "players"
-              ]
-            },
-            "params": [
-              {
-                "key": "tournamentId",
-                "value": "{{tournament_id}}"
-              }
-            ]
-          },
-          "response": [
-            {
-              "name": "Players List",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"players\": [\n    {\n      \"id\": 1,\n      \"name\": \"John Doe\",\n      \"age\": 16,\n      \"yearOfBirth\": 2010,\n      \"weight\": 12.5,\n      \"gender\": \"MALE\",\n      \"clubId\": 1,\n      \"clubName\": \"Dragon TKD Club\",\n      \"photoUrl\": null\n    }\n  ],\n  \"total\": 1\n}"
+              "body": "{\n  \"id\": \"...\",\n  \"name\": \"Dragon TKD Club\"\n}"
             }
           ]
         }
@@ -630,15 +529,53 @@
       "name": "Matches",
       "item": [
         {
-          "name": "Generate Bracket",
+          "name": "List Matches",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/matches?page=1&pageSize=20&tournamentId=tournament_1&status=PENDING",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches"
+              ],
+              "query": [
+                { "key": "page", "value": "1", "description": "1-indexed" },
+                { "key": "pageSize", "value": "20" },
+                { "key": "tournamentId", "value": "", "disabled": true },
+                { "key": "playerSearch", "value": "", "disabled": true },
+                { "key": "startDate", "value": "", "disabled": true },
+                { "key": "endDate", "value": "", "disabled": true },
+                { "key": "status", "value": "PENDING", "description": "PENDING | IN_PROGRESS | COMPLETED", "disabled": true },
+                { "key": "round", "value": "", "disabled": true }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Matches List (200)",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"match_1\",\n      \"tournamentId\": \"tournament_1\",\n      \"tournamentName\": \"Summer Championship\",\n      \"categoryName\": \"Male -58kg\",\n      \"round\": 2,\n      \"player1\": { \"id\": \"p1\", \"fullName\": \"Kim Minjun\", \"club\": { \"id\": \"c1\", \"name\": \"Seoul Dragons\" } },\n      \"player2\": { \"id\": \"p2\", \"fullName\": \"Lee Donghyuk\", \"club\": { \"id\": \"c2\", \"name\": \"Busan Tigers\" } },\n      \"winner\": null,\n      \"status\": \"PENDING\",\n      \"scheduledAt\": \"2026-08-01T10:00:00.000Z\"\n    }\n  ],\n  \"totalCount\": 1,\n  \"page\": 1,\n  \"pageSize\": 20\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Live Matches",
+      "item": [
+        {
+          "name": "Get Live Match",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
                   "var jsonData = pm.response.json();",
-                  "if (jsonData.matches && jsonData.matches.length > 0) {",
-                  "  pm.collectionVariables.set('match_id', jsonData.matches[0].id);",
+                  "if (jsonData.id) {",
+                  "  pm.collectionVariables.set('match_id', jsonData.id);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -646,138 +583,30 @@
             }
           ],
           "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"tournamentId\": {{tournament_id}},\n  \"weightClass\": \"Male -58kg\",\n  \"gender\": \"MALE\",\n  \"matchType\": \"SINGLE_ELIMINATION\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/matches/generate",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "matches",
-                "generate"
-              ]
-            }
-          },
-          "response": [
-            {
-              "name": "Bracket Generated",
-              "status": "Created",
-              "code": 201,
-              "body": "{\n  \"matches\": [\n    {\n      \"id\": 1,\n      \"player1Id\": 1,\n      \"player1Name\": \"John Doe\",\n      \"player2Id\": 2,\n      \"player2Name\": \"Bob Smith\",\n      \"scheduledTime\": \"2026-08-01T09:00:00.000Z\",\n      \"intraClubWarning\": true,\n      \"bracketRound\": 1\n    }\n  ],\n  \"totalMatches\": 1,\n  \"warnings\": [\n    { \"matchId\": 1, \"reason\": \"intra_club_match\" }\n  ]\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get Match By ID",
-          "request": {
             "method": "GET",
             "url": {
-              "raw": "{{base_url}}/matches/{{match_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "matches",
-                "{{match_id}}"
-              ]
-            }
-          },
-          "response": [
-            {
-              "name": "Match Details",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"id\": 1,\n  \"tournamentId\": 1,\n  \"type\": \"SINGLE_ELIMINATION\",\n  \"status\": \"SCHEDULED\",\n  \"currentRound\": 1,\n  \"scorePlayer1\": 0,\n  \"scorePlayer2\": 0,\n  \"intraClubWarning\": false,\n  \"player1\": { \"id\": 1, \"name\": \"John Doe\" },\n  \"player2\": { \"id\": 2, \"name\": \"Bob Smith\" }\n}"
-            }
-          ]
-        },
-        {
-          "name": "Start Match",
-          "request": {
-            "method": "POST",
-            "url": {
-              "raw": "{{base_url}}/matches/{{match_id}}/start",
+              "raw": "{{base_url}}/matches/{{match_id}}/live",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "matches",
                 "{{match_id}}",
-                "start"
+                "live"
               ]
             }
           },
           "response": [
             {
-              "name": "Match Started",
+              "name": "Live Match State (200)",
               "status": "OK",
               "code": 200,
-              "body": "{\n  \"id\": 1,\n  \"status\": \"IN_PROGRESS\",\n  \"startedAt\": \"2026-07-13T12:00:00.000Z\",\n  \"currentRound\": 1\n}"
+              "body": "{\n  \"id\": \"match_1\",\n  \"player1\": { \"id\": \"p1\", \"fullName\": \"Kim Minjun\", \"club\": { \"id\": \"c1\", \"name\": \"Seoul Dragons\" } },\n  \"player2\": { \"id\": \"p2\", \"fullName\": \"Lee Donghyuk\", \"club\": { \"id\": \"c2\", \"name\": \"Busan Tigers\" } },\n  \"winner\": null,\n  \"nextMatchId\": \"match_3\",\n  \"round\": 2,\n  \"currentRound\": 1,\n  \"totalRounds\": 3,\n  \"roundDurationSeconds\": 120,\n  \"hongScore\": 0,\n  \"chungScore\": 0,\n  \"hongPenalties\": 0,\n  \"chungPenalties\": 0,\n  \"hongInjured\": false,\n  \"chungInjured\": false,\n  \"hongExcluded\": false,\n  \"chungExcluded\": false,\n  \"timerStartTime\": null,\n  \"accumulatedPausedTime\": 0,\n  \"status\": \"PRE_MATCH\"\n}"
             }
           ]
         },
         {
-          "name": "Pause Match",
-          "request": {
-            "method": "POST",
-            "url": {
-              "raw": "{{base_url}}/matches/{{match_id}}/pause",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "matches",
-                "{{match_id}}",
-                "pause"
-              ]
-            }
-          },
-          "response": [
-            {
-              "name": "Match Paused",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"id\": 1,\n  \"status\": \"PAUSED\",\n  \"pausedAt\": \"2026-07-13T12:05:00.000Z\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Resume Match",
-          "request": {
-            "method": "POST",
-            "url": {
-              "raw": "{{base_url}}/matches/{{match_id}}/resume",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "matches",
-                "{{match_id}}",
-                "resume"
-              ]
-            }
-          },
-          "response": [
-            {
-              "name": "Match Resumed",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"id\": 1,\n  \"status\": \"IN_PROGRESS\",\n  \"resumedAt\": \"2026-07-13T12:06:00.000Z\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "End Match",
+          "name": "Perform Action (Start/Pause/Resume/etc)",
           "request": {
             "method": "POST",
             "header": [
@@ -788,56 +617,33 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"winnerId\": 1,\n  \"endReason\": \"TIME_EXPIRED\"\n}"
+              "raw": "{\n  \"action\": \"START\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/matches/{{match_id}}/end",
+              "raw": "{{base_url}}/matches/{{match_id}}/live/action",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "matches",
                 "{{match_id}}",
-                "end"
+                "live",
+                "action"
               ]
             }
           },
           "response": [
             {
-              "name": "Match Ended",
+              "name": "Action Performed (200)",
+              "description": "Actions: START, PAUSE, RESUME, END_ROUND, START_NEXT_ROUND, END_MATCH, RESET",
               "status": "OK",
               "code": 200,
-              "body": "{\n  \"id\": 1,\n  \"status\": \"FINISHED\",\n  \"winnerId\": 1,\n  \"endTime\": \"2026-07-13T12:10:00.000Z\",\n  \"finalScore\": {\n    \"player1\": 25,\n    \"player2\": 18\n  }\n}"
+              "body": "{\n  ...updated LiveMatchResponse\n}"
             }
           ]
         },
         {
-          "name": "Cancel Match",
-          "request": {
-            "method": "POST",
-            "url": {
-              "raw": "{{base_url}}/matches/{{match_id}}/cancel",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "matches",
-                "{{match_id}}",
-                "cancel"
-              ]
-            }
-          },
-          "response": [
-            {
-              "name": "Match Cancelled",
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"id\": 1,\n  \"status\": \"CANCELLED\",\n  \"cancelledAt\": \"2026-07-13T12:00:00.000Z\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Add Points (HTTP Fallback)",
+          "name": "Add Points",
           "request": {
             "method": "POST",
             "header": [
@@ -848,31 +654,32 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"playerId\": 1,\n  \"points\": 3,\n  \"roundNumber\": 1\n}"
+              "raw": "{\n  \"side\": \"hong\",\n  \"points\": 3\n}"
             },
             "url": {
-              "raw": "{{base_url}}/matches/{{match_id}}/points",
+              "raw": "{{base_url}}/matches/{{match_id}}/live/points",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "matches",
                 "{{match_id}}",
+                "live",
                 "points"
               ]
             }
           },
           "response": [
             {
-              "name": "Points Added",
+              "name": "Points Added (200)",
               "status": "OK",
               "code": 200,
-              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"status\": \"IN_PROGRESS\",\n    \"scorePlayer1\": 3,\n    \"scorePlayer2\": 0,\n    \"player1\": { \"id\": 1, \"name\": \"Alice\" },\n    \"player2\": { \"id\": 2, \"name\": \"Bob\" }\n  }\n}"
+              "body": "{\n  ...updated LiveMatchResponse\n}"
             }
           ]
         },
         {
-          "name": "Remove Points (HTTP Fallback)",
+          "name": "Undo Points",
           "request": {
             "method": "POST",
             "header": [
@@ -883,31 +690,33 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"playerId\": 1,\n  \"points\": 1,\n  \"roundNumber\": 1\n}"
+              "raw": "{\n  \"side\": \"hong\",\n  \"points\": 3\n}"
             },
             "url": {
-              "raw": "{{base_url}}/matches/{{match_id}}/remove-points",
+              "raw": "{{base_url}}/matches/{{match_id}}/live/points/undo",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "matches",
                 "{{match_id}}",
-                "remove-points"
+                "live",
+                "points",
+                "undo"
               ]
             }
           },
           "response": [
             {
-              "name": "Points Removed",
+              "name": "Points Undone (200)",
               "status": "OK",
               "code": 200,
-              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"status\": \"IN_PROGRESS\",\n    \"scorePlayer1\": 2,\n    \"scorePlayer2\": 0\n  }\n}"
+              "body": "{\n  ...updated LiveMatchResponse\n}"
             }
           ]
         },
         {
-          "name": "End Round (HTTP Fallback)",
+          "name": "Add Penalty (Gam-jeom)",
           "request": {
             "method": "POST",
             "header": [
@@ -918,410 +727,128 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"roundNumber\": 1\n}"
+              "raw": "{\n  \"side\": \"chung\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/matches/{{match_id}}/end-round",
+              "raw": "{{base_url}}/matches/{{match_id}}/live/penalty",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "matches",
                 "{{match_id}}",
-                "end-round"
+                "live",
+                "penalty"
               ]
             }
           },
           "response": [
             {
-              "name": "Round Ended",
+              "name": "Penalty Added (200)",
+              "description": "Increments target penalty AND adds +1 point to OPPONENT",
               "status": "OK",
               "code": 200,
-              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"status\": \"IN_PROGRESS\",\n    \"currentRound\": 2\n  }\n}"
+              "body": "{\n  ...updated LiveMatchResponse\n}"
             }
           ]
-        }
-      ]
-    },
-    {
-      "name": "Player Management",
-      "item": [
-        {
-          "name": "List Players (Paginated)",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/players?tournamentId=1&page=1&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["players"],
-              "query": [
-                { "key": "tournamentId", "value": "1" },
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "20" }
-              ]
-            }
-          }
         },
         {
-          "name": "Get Player by ID",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/players/{{player_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["players", "{{player_id}}"]
-            }
-          }
-        },
-        {
-          "name": "Update Player",
-          "request": {
-            "method": "PUT",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"weight\": 75.5\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/players/{{player_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["players", "{{player_id}}"]
-            }
-          }
-        },
-        {
-          "name": "Delete Player",
-          "request": {
-            "method": "DELETE",
-            "url": {
-              "raw": "{{base_url}}/players/{{player_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["players", "{{player_id}}"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Club Management",
-      "item": [
-        {
-          "name": "List Clubs (Paginated)",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/clubs?page=1&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["clubs"],
-              "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "20" }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get Club by ID",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/clubs/{{club_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["clubs", "{{club_id}}"]
-            }
-          }
-        },
-        {
-          "name": "Update Club",
-          "request": {
-            "method": "PUT",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Club Name\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/clubs/{{club_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["clubs", "{{club_id}}"]
-            }
-          }
-        },
-        {
-          "name": "Delete Club",
-          "request": {
-            "method": "DELETE",
-            "url": {
-              "raw": "{{base_url}}/clubs/{{club_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["clubs", "{{club_id}}"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Tournament Management",
-      "item": [
-        {
-          "name": "List Tournaments (Paginated)",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/tournaments?page=1&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["tournaments"],
-              "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "20" }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get Tournament by ID (with stats)",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/tournaments/{{tournament_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["tournaments", "{{tournament_id}}"]
-            }
-          }
-        },
-        {
-          "name": "Update Tournament",
-          "request": {
-            "method": "PUT",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Tournament Name\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/tournaments/{{tournament_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["tournaments", "{{tournament_id}}"]
-            }
-          }
-        },
-        {
-          "name": "Mark Tournament Complete",
+          "name": "Set Injury",
           "request": {
             "method": "POST",
-            "url": {
-              "raw": "{{base_url}}/tournaments/{{tournament_id}}/complete",
-              "host": ["{{base_url}}"],
-              "path": ["tournaments", "{{tournament_id}}", "complete"]
-            }
-          }
-        },
-        {
-          "name": "Delete Tournament",
-          "request": {
-            "method": "DELETE",
-            "url": {
-              "raw": "{{base_url}}/tournaments/{{tournament_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["tournaments", "{{tournament_id}}"]
-            }
-          }
-        },
-        {
-          "name": "List Tournament Clubs",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/tournaments/{{tournament_id}}/clubs",
-              "host": ["{{base_url}}"],
-              "path": ["tournaments", "{{tournament_id}}", "clubs"]
-            }
-          }
-        },
-        {
-          "name": "Register Club for Tournament",
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"clubId\": 1\n}"
+              "raw": "{\n  \"side\": \"hong\",\n  \"isInjured\": true\n}"
             },
             "url": {
-              "raw": "{{base_url}}/tournaments/{{tournament_id}}/clubs",
-              "host": ["{{base_url}}"],
-              "path": ["tournaments", "{{tournament_id}}", "clubs"]
-            }
-          }
-        },
-        {
-          "name": "Deregister Club from Tournament",
-          "request": {
-            "method": "DELETE",
-            "url": {
-              "raw": "{{base_url}}/tournaments/{{tournament_id}}/clubs/{{club_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["tournaments", "{{tournament_id}}", "clubs", "{{club_id}}"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Match Management",
-      "item": [
-        {
-          "name": "List Matches (Paginated)",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/matches?tournamentId=1&page=1&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["matches"],
-              "query": [
-                { "key": "tournamentId", "value": "1" },
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "20" }
+              "raw": "{{base_url}}/matches/{{match_id}}/live/injury",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "{{match_id}}",
+                "live",
+                "injury"
               ]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "Injury Set (200)",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  ...updated LiveMatchResponse\n}"
+            }
+          ]
         },
         {
-          "name": "Schedule Match",
+          "name": "Exclude Player (Disqualify)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tournamentId\": 1,\n  \"player1Id\": 1,\n  \"player2Id\": 2,\n  \"scheduledTime\": \"2026-07-15T10:00:00Z\",\n  \"type\": \"FRIENDLY\"\n}"
+              "raw": "{\n  \"side\": \"hong\",\n  \"reason\": \"Disqualification for misconduct\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/matches/schedule",
-              "host": ["{{base_url}}"],
-              "path": ["matches", "schedule"]
-            }
-          }
-        },
-        {
-          "name": "Reschedule Match",
-          "request": {
-            "method": "PUT",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"scheduledTime\": \"2026-07-15T11:00:00Z\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/matches/{{match_id}}/reschedule",
-              "host": ["{{base_url}}"],
-              "path": ["matches", "{{match_id}}", "reschedule"]
-            }
-          }
-        },
-        {
-          "name": "Walkover",
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"winnerId\": 1\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/matches/{{match_id}}/walkover",
-              "host": ["{{base_url}}"],
-              "path": ["matches", "{{match_id}}", "walkover"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Dashboard",
-      "item": [
-        {
-          "name": "Tournament List (Dashboard)",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/dashboard/tournaments?page=1&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["dashboard", "tournaments"],
-              "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "20" }
+              "raw": "{{base_url}}/matches/{{match_id}}/live/exclude",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "{{match_id}}",
+                "live",
+                "exclude"
               ]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "Player Excluded (200)",
+              "description": "Sets excluded flag, assigns opponent as winner, changes status to MATCH_END",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  ...updated LiveMatchResponse with winner set and status MATCH_END\n}"
+            }
+          ]
         },
         {
-          "name": "Tournament Overview (Dashboard)",
+          "name": "Get Suggested Next Matches",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{base_url}}/dashboard/tournaments/{{tournament_id}}/overview",
-              "host": ["{{base_url}}"],
-              "path": ["dashboard", "tournaments", "{{tournament_id}}", "overview"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "User Administration",
-      "item": [
-        {
-          "name": "List Users",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/admin/users?page=1&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "users"],
-              "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "20" }
+              "raw": "{{base_url}}/matches/{{match_id}}/suggestions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "{{match_id}}",
+                "suggestions"
               ]
             }
-          }
-        },
-        {
-          "name": "Assign TKD Role",
-          "request": {
-            "method": "PUT",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"tkdRole\": \"MAT_JUDGE\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/admin/users/{{user_id}}/role",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "users", "{{user_id}}", "role"]
+          },
+          "response": [
+            {
+              "name": "Suggestions (200)",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": \"match_3\",\n    \"categoryName\": \"Male -58kg\",\n    \"tournamentName\": \"Summer Championship\",\n    \"player1\": { \"id\": \"p1\", \"fullName\": \"Kim Minjun\" },\n    \"player2\": { \"id\": \"p3\", \"fullName\": \"Park Jihoo\" },\n    \"scheduledAt\": \"2026-08-01T11:00:00.000Z\",\n    \"priority\": 1\n  }\n]"
             }
-          }
-        },
-        {
-          "name": "Deactivate User",
-          "request": {
-            "method": "PUT",
-            "url": {
-              "raw": "{{base_url}}/admin/users/{{user_id}}/deactivate",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "users", "{{user_id}}", "deactivate"]
-            }
-          }
-        },
-        {
-          "name": "Reactivate User",
-          "request": {
-            "method": "PUT",
-            "url": {
-              "raw": "{{base_url}}/admin/users/{{user_id}}/reactivate",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "users", "{{user_id}}", "reactivate"]
-            }
-          }
+          ]
         }
       ]
     }

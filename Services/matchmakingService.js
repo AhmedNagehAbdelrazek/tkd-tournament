@@ -1,6 +1,5 @@
 const { Player, Match, Club, Tournament, MatchEvent, TournamentClub } = require('../Models');
 const { ApiErrors } = require('../utils/ApiError');
-const { MATCH_STATUS, MATCH_TYPES } = require('../config/constants');
 
 function calculateClubPercentages(players) {
   const counts = {};
@@ -135,15 +134,19 @@ async function generateBracket(data) {
     for (let pos = 0; pos < r.matchCount; pos++) {
       const match = await Match.create({
         tournamentId: data.tournamentId,
-        type: data.matchType || MATCH_TYPES.SINGLE_ELIMINATION,
+        type: data.matchType || 'SINGLE_ELIMINATION',
         player1Id: null,
         player2Id: null,
         scheduledTime: new Date(baseTime.getTime() + r.round * 3600000),
-        status: MATCH_STATUS.SCHEDULED,
+        status: 'SCHEDULED',
         bracketRound: r.round,
         weightClass: data.weightClass,
         stageName: r.roundName,
         bracketPosition: pos,
+        hongScore: 0,
+        chungScore: 0,
+        scorePlayer1: 0,
+        scorePlayer2: 0,
       });
       roundMatches[r.round].push(match);
     }
@@ -186,7 +189,7 @@ async function generateBracket(data) {
         await match.update({
           player1Id: byePlayer.id,
           player2Id: null,
-          status: MATCH_STATUS.FINISHED,
+          status: 'FINISHED',
           winnerId: byePlayer.id,
           endReason: 'BYE',
           endTime: new Date(),

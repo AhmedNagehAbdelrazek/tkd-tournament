@@ -1,6 +1,6 @@
 const { Player, Club, Tournament, Match } = require('../Models');
 const { ApiErrors } = require('../utils/ApiError');
-const { parsePagination, buildPaginationMeta } = require('../utils/pagination');
+const { parsePagination, buildPaginatedResponse } = require('../utils/pagination');
 const { logAudit, AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } = require('../Services/auditService');
 const { Op } = require('sequelize');
 
@@ -38,24 +38,21 @@ function validateWeight(tournament, weight, gender) {
 
 function shapePlayer(p) {
   return {
-    id: p.id,
-    name: p.name,
-    dob: p.dob,
-    age: calculateAge(p.dob),
-    yearOfBirth: yearOfBirth(p.dob),
-    weight: parseFloat(p.weight),
+    id: String(p.id),
+    fullName: p.name,
+    nationalId: p.nationalId || null,
     gender: p.gender,
-    clubId: p.clubId,
-    clubName: p.Club?.name || null,
-    tournamentId: p.tournamentId,
-    photoUrl: p.photoUrl,
-    seed: p.seed,
+    weightKg: parseFloat(p.weight),
+    club: p.Club ? { id: String(p.Club.id || p.clubId), name: p.Club.name } : null,
+    dateOfBirth: p.dob,
+    imageUrl: p.photoUrl || p.imageUrl || null,
+    birthCertificateUrl: p.birthCertificateUrl || null,
   };
 }
 
 async function getById(id) {
   const player = await Player.findByPk(id, {
-    include: [{ model: Club, attributes: ['name'] }],
+    include: [{ model: Club, attributes: ['id', 'name'] }],
   });
   if (!player) {
     throw ApiErrors.notFound('Player not found');
@@ -64,42 +61,43 @@ async function getById(id) {
 }
 
 async function create(data, actorId) {
-  const tournament = await Tournament.findByPk(data.tournamentId);
-  if (!tournament) {
-    throw ApiErrors.notFound('Tournament not found');
-  }
-  if (tournament.isCompleted) {
-    throw ApiErrors.badRequest('Cannot register player for a completed tournament');
-  }
+  const playersArray = Array.isArray(data) ? data : [data];
+  const createdPlayers = [];
 
-  const club = await Club.findByPk(data.clubId);
-  if (!club) {
-    throw ApiErrors.notFound('Club not found');
-  }
+  for (const p of playersArray) {
+    const clubId = p.club?.id || p.clubId;
+    const club = await Club.findByPk(clubId);
+    if (!club) {
+      throw ApiErrors.notFound(`Club not found: ${clubId}`);
+    }
 
-  validateWeight(tournament, data.weight, data.gender);
-
-  const player = await Player.create({
-    name: data.name,
-    dob: data.dob,
-    weight: data.weight,
-    gender: data.gender,
-    clubId: data.clubId,
-    tournamentId: data.tournamentId,
-    photoUrl: data.photoUrl || null,
-  });
-
-  if (actorId) {
-    logAudit({
-      actorId,
-      action: AUDIT_ACTIONS.CREATE,
-      entityType: AUDIT_ENTITY_TYPES.PLAYER,
-      entityId: player.id,
-      metadata: { name: player.name, tournamentId: data.tournamentId },
+    const player = await Player.create({
+      name: p.fullName || p.name,
+      dob: p.dateOfBirth || p.dob,
+      weight: p.weightKg || p.weight,
+      gender: p.gender,
+      clubId: parseInt(clubId),
+      tournamentId: p.tournamentId || null,
+      nationalId: p.nationalId || null,
+      imageUrl: p.imageUrl || null,
+      birthCertificateUrl: p.birthCertificateUrl || null,
+      photoUrl: p.imageUrl || p.photoUrl || null,
     });
+
+    if (actorId) {
+      logAudit({
+        actorId,
+        action: AUDIT_ACTIONS.CREATE,
+        entityType: AUDIT_ENTITY_TYPES.PLAYER,
+        entityId: player.id,
+        metadata: { name: player.name },
+      });
+    }
+
+    createdPlayers.push(shapePlayer({ ...player, Club: club }));
   }
 
-  return shapePlayer({ ...player, Club: club });
+  return createdPlayers;
 }
 
 async function update(id, data, actorId) {
@@ -108,9 +106,11 @@ async function update(id, data, actorId) {
     throw ApiErrors.notFound('Player not found');
   }
 
-  const tournament = await Tournament.findByPk(player.tournamentId);
-  if (tournament.isCompleted) {
-    throw ApiErrors.badRequest('Cannot update player for a completed tournament');
+  if (player.tournamentId) {
+    const tournament = await Tournament.findByPk(player.tournamentId);
+    if (tournament && tournament.isCompleted) {
+      throw ApiErrors.badRequest('Cannot update player for a completed tournament');
+    }
   }
 
   if (data.clubId) {
@@ -122,8 +122,11 @@ async function update(id, data, actorId) {
 
   const weight = data.weight || parseFloat(player.weight);
   const gender = data.gender || player.gender;
-  if (data.weight || data.gender) {
-    validateWeight(tournament, weight, gender);
+  if ((data.weight || data.gender) && player.tournamentId) {
+    const tournament = await Tournament.findByPk(player.tournamentId);
+    if (tournament) {
+      validateWeight(tournament, weight, gender);
+    }
   }
 
   const previousValues = {};
@@ -192,12 +195,18 @@ async function remove(id, actorId) {
 }
 
 async function list(query = {}) {
-  const { page, limit, offset } = parsePagination(query);
+  const { page, limit, offset, pageSize } = parsePagination(query);
   const where = {};
 
   if (query.tournamentId) where.tournamentId = query.tournamentId;
   if (query.gender) where.gender = query.gender;
   if (query.clubId) where.clubId = query.clubId;
+  if (query.search) {
+    where[Op.or] = [
+      { name: { [Op.iLike]: `%${query.search}%` } },
+      { nationalId: { [Op.iLike]: `%${query.search}%` } },
+    ];
+  }
   if (query.weightClass && query.tournamentId) {
     const tournament = await Tournament.findByPk(query.tournamentId);
     if (tournament) {
@@ -209,16 +218,29 @@ async function list(query = {}) {
     }
   }
 
+  const include = [{ model: Club, attributes: ['id', 'name'] }];
+
+  if (query.clubName) {
+    include[0].where = { name: { [Op.iLike]: `%${query.clubName}%` } };
+  }
+
+  let order = [['name', 'ASC']];
+  if (query.sortBy) {
+    const sortDir = query.sortOrder === 'desc' ? 'DESC' : 'ASC';
+    const sortField = query.sortBy === 'name' ? 'name' : query.sortBy === 'weight' ? 'weight' : query.sortBy;
+    order = [[sortField, sortDir]];
+  }
+
   const { rows, count } = await Player.findAndCountAll({
     where,
-    include: [{ model: Club, attributes: ['name'] }],
-    order: [['name', 'ASC']],
+    include,
+    order,
     limit,
     offset,
   });
 
-  const meta = buildPaginationMeta(count, page, limit);
-  return { data: rows.map(shapePlayer), meta };
+  const data = rows.map(shapePlayer);
+  return buildPaginatedResponse(data, count, page, pageSize);
 }
 
 async function bulkCreate(data, actorId) {

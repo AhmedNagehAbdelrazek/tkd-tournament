@@ -14,6 +14,11 @@ Player.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    nationalId: {
+      type: DataTypes.STRING(14),
+      allowNull: true,
+      field: 'national_id',
+    },
     dob: {
       type: DataTypes.DATEONLY,
       allowNull: false,
@@ -37,13 +42,23 @@ Player.init(
     },
     tournamentId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       field: 'tournament_id',
     },
     photoUrl: {
       type: DataTypes.TEXT,
       allowNull: true,
       field: 'photo_url',
+    },
+    imageUrl: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: 'image_url',
+    },
+    birthCertificateUrl: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: 'birth_certificate_url',
     },
     createdAt: {
       type: DataTypes.DATE,

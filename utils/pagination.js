@@ -2,26 +2,24 @@ const { PAGINATION } = require('../config/constants');
 
 function parsePagination(query) {
   let page = parseInt(query.page, 10) || PAGINATION.DEFAULT_PAGE;
-  let limit = parseInt(query.limit, 10) || PAGINATION.DEFAULT_LIMIT;
+  let pageSize = parseInt(query.pageSize || query.limit, 10) || PAGINATION.DEFAULT_LIMIT;
 
   if (page < 1) page = PAGINATION.DEFAULT_PAGE;
-  if (limit < 1) limit = PAGINATION.DEFAULT_LIMIT;
-  if (limit > PAGINATION.MAX_LIMIT) limit = PAGINATION.MAX_LIMIT;
+  if (pageSize < 1) pageSize = PAGINATION.DEFAULT_LIMIT;
+  if (pageSize > PAGINATION.MAX_LIMIT) pageSize = PAGINATION.MAX_LIMIT;
 
-  const offset = (page - 1) * limit;
+  const offset = (page - 1) * pageSize;
 
-  return { page, limit, offset };
+  return { page, limit: pageSize, offset, pageSize };
 }
 
-function buildPaginationMeta(total, page, limit) {
-  const totalPages = Math.ceil(total / limit);
-
+function buildPaginatedResponse(data, totalCount, page, pageSize) {
   return {
+    data,
+    totalCount,
     page,
-    limit,
-    total,
-    totalPages,
+    pageSize,
   };
 }
 
-module.exports = { parsePagination, buildPaginationMeta };
+module.exports = { parsePagination, buildPaginatedResponse };
