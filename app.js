@@ -15,7 +15,10 @@ function createApp() {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  app.use('/api/v1', apiRouter);
+  app.get('/', (req, res) => {
+    res.send('Hello to TKD Server');
+  });
+  app.use('/api/v1', apiRouter);  
 
   app.use(globalErrorHandler);
 

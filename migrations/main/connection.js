@@ -25,6 +25,9 @@ function loadEnv() {
 
 function createConnection(overrides = {}) {
   loadEnv();
+  const sslMode = String(process.env.PGSSLMODE || process.env.DB_SSL_MODE || '').toLowerCase();
+  const useSsl = ['require', 'true', '1', 'yes', 'on'].includes(sslMode) || process.env.DB_SSL === 'true';
+
   const config = {
     dialect: 'postgres',
     host: overrides.host || process.env.DB_HOST || 'localhost',
@@ -33,6 +36,16 @@ function createConnection(overrides = {}) {
     username: overrides.username || process.env.DB_USERNAME,
     password: overrides.password || process.env.DB_PASSWORD,
     logging: overrides.logging ?? false,
+    ...(useSsl
+      ? {
+          dialectOptions: {
+            ssl: {
+              require: true,
+              rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true',
+            },
+          },
+        }
+      : {}),
   };
 
   return new Sequelize(config);
