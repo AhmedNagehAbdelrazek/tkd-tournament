@@ -13,27 +13,28 @@ const getBracket = async (req, res, next) => {
       return successResponse(res, result);
     }
 
-    const tree = await bracketService.buildBracketTree(tournamentId, weightClass, gender);
-    if (!tree) {
+    const result = await bracketService.buildBracketTree(tournamentId, weightClass, gender);
+    if (!result) {
       return successResponse(res, {
         tournamentId: parseInt(tournamentId),
         weightClass,
         gender,
-        currentStage: null,
+        currentRound: null,
+        totalRounds: 0,
         bracket: null,
       });
     }
 
-    // ponytail: gather all matches for stage detection — reuses same filter logic
     const allMatches = await Match.findAll({ where: { tournamentId } });
-    const currentStage = bracketService.determineCurrentStage(allMatches);
+    const currentRound = bracketService.determineCurrentRound(allMatches);
 
     successResponse(res, {
       tournamentId: parseInt(tournamentId),
       weightClass,
       gender,
-      currentStage,
-      bracket: tree,
+      currentRound,
+      totalRounds: result.totalRounds,
+      bracket: result.bracket,
     });
   } catch (err) { next(err); }
 };

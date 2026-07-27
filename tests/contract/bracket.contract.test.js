@@ -53,14 +53,22 @@ describe('Bracket Contract Tests', () => {
       expect(data).toHaveProperty('tournamentId');
       expect(data).toHaveProperty('weightClass');
       expect(data).toHaveProperty('gender');
-      expect(data).toHaveProperty('currentStage');
+      expect(data).toHaveProperty('currentRound');
+      expect(data).toHaveProperty('totalRounds');
       expect(data).toHaveProperty('bracket');
 
       if (data.bracket) {
-        expect(typeof data.bracket.id).toBe('number');
-        expect(data.bracket).toHaveProperty('stageName');
-        expect(data.bracket).toHaveProperty('status');
-        expect(data.bracket).toHaveProperty('bracketPosition');
+        expect(typeof data.bracket).toBe('object');
+        for (const [key, matches] of Object.entries(data.bracket)) {
+          expect(key).toMatch(/^Round \d+$/);
+          expect(Array.isArray(matches)).toBe(true);
+          for (const match of matches) {
+            expect(match).toHaveProperty('id');
+            expect(match).toHaveProperty('status');
+            expect(match).toHaveProperty('player1');
+            expect(match).toHaveProperty('player2');
+          }
+        }
       }
     }
   });

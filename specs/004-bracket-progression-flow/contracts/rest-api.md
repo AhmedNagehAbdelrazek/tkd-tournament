@@ -21,58 +21,23 @@ Get the nested bracket tree for a specific weight class and gender.
     "tournamentId": "uuid",
     "weightClass": "10-15kg",
     "gender": "MALE",
-    "currentStage": "Quarterfinal",
+    "currentRound": 1,
+    "totalRounds": 4,
     "bracket": {
-      "id": "uuid",
-      "stageName": "Final",
-      "status": "SCHEDULED",
-      "bracketPosition": 7,
-      "player1": { "id": "uuid", "name": "Player A" },
-      "player2": { "id": "uuid", "name": "Player B" },
-      "player1Source": {
-        "id": "uuid",
-        "stageName": "Semifinal 1",
-        "status": "FINISHED",
-        "winnerId": "uuid",
-        "bracketPosition": 5,
-        "player1Source": {
-          "id": "uuid",
-          "stageName": "Quarterfinal 1",
-          "status": "FINISHED",
-          "winnerId": "uuid",
-          "bracketPosition": 1,
-          "winner": { "id": "uuid", "name": "Player A" }
-        },
-        "player2Source": {
-          "id": "uuid",
-          "stageName": "Quarterfinal 2",
-          "status": "FINISHED",
-          "winnerId": "uuid",
-          "bracketPosition": 2,
-          "winner": { "id": "uuid", "name": "Player C" }
-        },
-        "winner": { "id": "uuid", "name": "Player A" }
-      },
-      "player2Source": {
-        "id": "uuid",
-        "stageName": "Semifinal 2",
-        "status": "SCHEDULED",
-        "bracketPosition": 6,
-        "player1Source": {
-          "id": "uuid",
-          "stageName": "Quarterfinal 3",
-          "status": "IN_PROGRESS",
-          "bracketPosition": 3
-        },
-        "player2Source": {
-          "id": "uuid",
-          "stageName": "Quarterfinal 4",
-          "status": "FINISHED",
-          "winnerId": "uuid",
-          "bracketPosition": 4,
-          "winner": { "id": "uuid", "name": "Player F" }
-        }
-      }
+      "Round 1": [
+        { "id": 1, "status": "FINISHED", "player1": { "name": "Player A" }, "player2": null, "winnerId": 1, "isBye": true, "endReason": "BYE" },
+        { "id": 2, "status": "SCHEDULED", "player1": { "name": "Player B" }, "player2": { "name": "Player C" } }
+      ],
+      "Round 2": [
+        { "id": 3, "status": "PENDING", "player1": null, "player2": null },
+        { "id": 4, "status": "PENDING", "player1": null, "player2": null }
+      ],
+      "Round 3": [
+        { "id": 5, "status": "PENDING", "player1": null, "player2": null }
+      ],
+      "Round 4": [
+        { "id": 6, "status": "PENDING", "player1": null, "player2": null }
+      ]
     }
   }
 }
@@ -154,8 +119,10 @@ Manually assign a player to a next-match slot (Head Judge only).
 
 ### Notes
 
-- The `bracket` object is the Final match node, recursively populated with `player1Source`/`player2Source` for feeder matches
-- Feeder matches that haven't finished yet have no `winnerId` or `winner` field
-- Feeder matches that haven't started yet have no `player1`/`player2` fields (both null)
-- Bye matches appear as FINISHED matches with a single player in their stage
-- Stages with zero matches are omitted from the response
+- The `bracket` object is keyed by round name (e.g., `"Round 1"`, `"Round 2"`) containing arrays of matches
+- Each match has `id`, `status`, `player1` (with `name`), and `player2` (with `name`)
+- `currentRound` is the highest round number with at least one active (IN_PROGRESS or SCHEDULED) match
+- `totalRounds` is the total number of rounds in the bracket
+- Matches with no player assigned yet have `player1`/`player2` as `null`
+- Bye matches appear as FINISHED with a single player and `isBye: true`
+- Empty rounds are omitted from the response

@@ -69,8 +69,9 @@ async function buildBracketTree(tournamentId, weightClass, gender) {
     const p2 = m.player2;
     const players = [p1, p2].filter(Boolean);
 
+    // ponytail: strictly enforce same gender — ALL players must match
     if (gender) {
-      if (!players.some((p) => p.gender === gender)) return false;
+      if (!players.every((p) => p.gender === gender)) return false;
     }
 
     if (range) {
@@ -81,7 +82,7 @@ async function buildBracketTree(tournamentId, weightClass, gender) {
   });
 
   if (filtered.length === 0) return null;
-  return buildTreeFromMatches(filtered);
+  return buildBracketRounds(filtered);
 }
 
 // ponytail: build all brackets for a tournament, grouped by gender and weight class
@@ -101,7 +102,7 @@ async function buildAllBrackets(tournamentId) {
   });
 
   if (allMatches.length === 0) {
-    return { tournamentId, brackets: {}, currentStage: null };
+    return { tournamentId, brackets: {}, currentRound: null };
   }
 
   const brackets = {};
@@ -111,79 +112,69 @@ async function buildAllBrackets(tournamentId) {
       const range = { min: wc.min, max: wc.max };
       const filtered = allMatches.filter((m) => {
         const players = [m.player1, m.player2].filter(Boolean);
-        return players.some((p) => p.gender === gender) &&
+        // ponytail: strictly enforce same gender — ALL players must match
+        return players.every((p) => p.gender === gender) &&
                players.some((p) => p.weight >= range.min && p.weight <= range.max);
       });
       if (filtered.length > 0) {
         if (!brackets[gender]) brackets[gender] = {};
-        brackets[gender][wc.name] = buildTreeFromMatches(filtered);
+        brackets[gender][wc.name] = buildBracketRounds(filtered);
       }
     }
   }
 
-  const currentStage = determineCurrentStage(allMatches);
-  return { tournamentId, brackets, currentStage };
+  const currentRound = determineCurrentRound(allMatches);
+  return { tournamentId, brackets, currentRound };
 }
 
-function buildTreeFromMatches(matches) {
+function buildBracketRounds(matches) {
   if (!matches || matches.length === 0) return null;
 
-  const map = {};
+  const rounds = {};
   for (const m of matches) {
-    map[m.id] = serializeMatch(m);
+    const round = m.bracketRound || 1;
+    const key = `Round ${round}`;
+    if (!rounds[key]) rounds[key] = [];
+    rounds[key].push(serializeMatch(m));
   }
 
-  let root = null;
-  for (const m of matches) {
-    if (m.nextMatchId && map[m.nextMatchId]) {
-      const slot = m.nextMatchSlot;
-      if (slot === 'PLAYER1') {
-        map[m.nextMatchId].player1Source = map[m.id];
-      } else if (slot === 'PLAYER2') {
-        map[m.nextMatchId].player2Source = map[m.id];
-      }
-    } else if (!m.nextMatchId) {
-      root = map[m.id];
-    }
+  const sortedKeys = Object.keys(rounds).sort((a, b) => {
+    const numA = parseInt(a.replace('Round ', ''), 10);
+    const numB = parseInt(b.replace('Round ', ''), 10);
+    return numA - numB;
+  });
+
+  const bracket = {};
+  for (const key of sortedKeys) {
+    bracket[key] = rounds[key];
   }
 
-  return root || null;
+  const totalRounds = sortedKeys.length;
+  return { bracket, totalRounds };
 }
 
 function serializeMatch(m) {
   const obj = {
     id: m.id,
-    stageName: m.stageName,
     status: m.status,
-    bracketPosition: m.bracketPosition,
-    bracketRound: m.bracketRound,
-    weightClass: m.weightClass,
   };
 
-  // ponytail: player info with club
   if (m.player1) {
-    obj.player1 = { id: m.player1.id, name: m.player1.name };
-    if (m.player1.Club) obj.player1.club = m.player1.Club.name;
+    obj.player1 = { name: m.player1.name };
   } else {
     obj.player1 = null;
   }
 
   if (m.player2) {
-    obj.player2 = { id: m.player2.id, name: m.player2.name };
-    if (m.player2.Club) obj.player2.club = m.player2.Club.name;
+    obj.player2 = { name: m.player2.name };
   } else {
     obj.player2 = null;
   }
 
-  // ponytail: winner and scores
   if (m.winnerId) obj.winnerId = m.winnerId;
-  if (m.winner) {
-    obj.winner = { id: m.winner.id, name: m.winner.name };
-  }
   if (m.scorePlayer1 !== undefined) obj.scorePlayer1 = m.scorePlayer1;
   if (m.scorePlayer2 !== undefined) obj.scorePlayer2 = m.scorePlayer2;
 
-  // ponytail: BYE info
   if (m.endReason === 'BYE') {
     obj.isBye = true;
     obj.endReason = 'BYE';
@@ -192,28 +183,19 @@ function serializeMatch(m) {
   return obj;
 }
 
-function determineCurrentStage(matches) {
+function determineCurrentRound(matches) {
   if (!matches || matches.length === 0) return null;
 
-  const stageOrder = [];
-  const stageSet = new Set();
+  let currentRound = null;
   for (const m of matches) {
-    if (!stageSet.has(m.stageName)) {
-      stageSet.add(m.stageName);
-      stageOrder.push(m.stageName);
+    const round = m.bracketRound || 1;
+    const hasActive = m.status === MATCH_STATUS.IN_PROGRESS || m.status === MATCH_STATUS.SCHEDULED;
+    if (hasActive) {
+      if (!currentRound || round > currentRound) currentRound = round;
     }
   }
 
-  let currentStage = null;
-  for (const stage of stageOrder) {
-    const stageMatches = matches.filter((m) => m.stageName === stage);
-    const hasActive = stageMatches.some(
-      (m) => m.status === MATCH_STATUS.IN_PROGRESS || m.status === MATCH_STATUS.SCHEDULED
-    );
-    if (hasActive) currentStage = stage;
-  }
-
-  return currentStage;
+  return currentRound;
 }
 
 async function overrideNextMatchSlot(matchId, playerId) {
@@ -244,8 +226,8 @@ module.exports = {
   progressWinner,
   buildBracketTree,
   buildAllBrackets,
-  buildTreeFromMatches,
-  determineCurrentStage,
+  buildBracketRounds,
+  determineCurrentRound,
   overrideNextMatchSlot,
   serializeMatch,
 };
