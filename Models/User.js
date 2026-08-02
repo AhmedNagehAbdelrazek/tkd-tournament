@@ -48,7 +48,7 @@ User.init(
             defaultValue: true,
         },
         tkdRole: {
-            type: DataTypes.ENUM('ADMIN', 'HEAD_JUDGE', 'MAT_JUDGE', 'SCOREKEEPER'),
+            type: DataTypes.ENUM(Object.values(ROLES)),
             allowNull: true,
             field: 'tkd_role',
         }

@@ -6,7 +6,13 @@ const ROLES = {
   HEAD_JUDGE: 'HEAD_JUDGE',
   MAT_JUDGE: 'MAT_JUDGE',
   SCOREKEEPER: 'SCOREKEEPER',
+  COACH: 'coach',
 };
+
+const SIGNUP_ROLES={
+  CUSTOMER: 'customer',
+  COACH: 'coach',
+}
 
 const MATCH_STATUS = {
   SCHEDULED: 'SCHEDULED',
@@ -49,8 +55,6 @@ const GENDERS = {
   MALE: 'MALE',
   FEMALE: 'FEMALE',
 };
-
-const SIGNUP_ROLES = [ROLES.CUSTOMER];
 
 const ADMIN_RESOURCES = [
   'products',
@@ -131,4 +135,5 @@ module.exports = {
   ADMIN_ACTIONS,
   AUDIT_ACTIONS,
   AUDIT_ENTITY_TYPES,
+  SIGNUP_ROLES
 };

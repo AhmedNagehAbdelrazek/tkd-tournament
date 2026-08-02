@@ -26,7 +26,7 @@
                         "value": "customer"
                     },
                     "field": "role",
-                    "seqType": "Sequelize.ENUM('super_admin', 'admin', 'customer', 'HEAD_JUDGE', 'MAT_JUDGE', 'SCOREKEEPER')"
+                    "seqType": "Sequelize.ENUM('super_admin', 'admin', 'customer', 'HEAD_JUDGE', 'MAT_JUDGE', 'SCOREKEEPER', 'coach')"
                 },
                 "name": {
                     "allowNull": true,
@@ -59,7 +59,7 @@
                 "tkdRole": {
                     "allowNull": true,
                     "field": "tkd_role",
-                    "seqType": "Sequelize.ENUM('ADMIN', 'HEAD_JUDGE', 'MAT_JUDGE', 'SCOREKEEPER')"
+                    "seqType": "Sequelize.ENUM('super_admin', 'admin', 'customer', 'HEAD_JUDGE', 'MAT_JUDGE', 'SCOREKEEPER', 'coach')"
                 },
                 "createdat": {
                     "allowNull": false,
@@ -885,5 +885,5 @@
             "indexes": []
         }
     },
-    "revision": 1
+    "revision": 2
 }

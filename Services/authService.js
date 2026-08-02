@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const { User } = require('../Models');
 const { ApiErrors } = require('../utils/ApiError');
 const auditService = require('./auditService');
+const { SIGNUP_ROLES } = require('../config/constants');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 const JWT_EXPIRY = '24h';
@@ -16,6 +17,10 @@ async function signup({ email, password, name, fullName, role }) {
 
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
   const displayName = fullName || name;
+
+  if(Object.values(SIGNUP_ROLES).indexOf(role) === -1) {
+    throw ApiErrors.badRequest('Invalid role');
+  }
 
   const user = await User.create({
     email,
