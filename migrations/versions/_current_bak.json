@@ -1,0 +1,889 @@
+{
+    "tables": {
+        "users": {
+            "tableName": "users",
+            "schema": {
+                "id": {
+                    "autoIncrement": true,
+                    "primaryKey": true,
+                    "field": "id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "email": {
+                    "allowNull": false,
+                    "unique": true,
+                    "field": "email",
+                    "seqType": "Sequelize.STRING"
+                },
+                "password": {
+                    "allowNull": false,
+                    "field": "password",
+                    "seqType": "Sequelize.STRING"
+                },
+                "role": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": "customer"
+                    },
+                    "field": "role",
+                    "seqType": "Sequelize.ENUM('super_admin', 'admin', 'customer', 'HEAD_JUDGE', 'MAT_JUDGE', 'SCOREKEEPER')"
+                },
+                "name": {
+                    "allowNull": true,
+                    "field": "name",
+                    "seqType": "Sequelize.STRING"
+                },
+                "contactInfo": {
+                    "allowNull": true,
+                    "field": "contact_info",
+                    "seqType": "Sequelize.JSONB"
+                },
+                "address": {
+                    "allowNull": true,
+                    "field": "address",
+                    "seqType": "Sequelize.TEXT"
+                },
+                "profilePictureUrl": {
+                    "allowNull": true,
+                    "field": "profile_picture_url",
+                    "seqType": "Sequelize.TEXT"
+                },
+                "isActive": {
+                    "allowNull": true,
+                    "defaultValue": {
+                        "value": true
+                    },
+                    "field": "is_active",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "tkdRole": {
+                    "allowNull": true,
+                    "field": "tkd_role",
+                    "seqType": "Sequelize.ENUM('ADMIN', 'HEAD_JUDGE', 'MAT_JUDGE', 'SCOREKEEPER')"
+                },
+                "createdat": {
+                    "allowNull": false,
+                    "field": "createdat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "updatedat": {
+                    "allowNull": false,
+                    "field": "updatedat",
+                    "seqType": "Sequelize.DATE"
+                }
+            },
+            "indexes": []
+        },
+        "uploaded_images": {
+            "tableName": "uploaded_images",
+            "schema": {
+                "id": {
+                    "autoIncrement": true,
+                    "primaryKey": true,
+                    "field": "id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "hash": {
+                    "allowNull": false,
+                    "unique": true,
+                    "field": "hash",
+                    "seqType": "Sequelize.STRING(64)"
+                },
+                "url": {
+                    "allowNull": false,
+                    "field": "url",
+                    "seqType": "Sequelize.TEXT"
+                },
+                "filename": {
+                    "allowNull": false,
+                    "field": "filename",
+                    "seqType": "Sequelize.TEXT"
+                },
+                "mimetype": {
+                    "allowNull": false,
+                    "field": "mimetype",
+                    "seqType": "Sequelize.TEXT"
+                },
+                "size": {
+                    "allowNull": true,
+                    "field": "size",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "createdat": {
+                    "allowNull": false,
+                    "field": "createdat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "updatedat": {
+                    "allowNull": false,
+                    "field": "updatedat",
+                    "seqType": "Sequelize.DATE"
+                }
+            },
+            "indexes": []
+        },
+        "tournaments": {
+            "tableName": "tournaments",
+            "schema": {
+                "id": {
+                    "autoIncrement": true,
+                    "primaryKey": true,
+                    "field": "id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "name": {
+                    "allowNull": false,
+                    "field": "name",
+                    "seqType": "Sequelize.STRING"
+                },
+                "startDate": {
+                    "allowNull": false,
+                    "field": "start_date",
+                    "seqType": "Sequelize.DATEONLY"
+                },
+                "endDate": {
+                    "allowNull": false,
+                    "field": "end_date",
+                    "seqType": "Sequelize.DATEONLY"
+                },
+                "settings": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "internal": true,
+                        "value": "Sequelize.Object"
+                    },
+                    "field": "settings",
+                    "seqType": "Sequelize.JSONB"
+                },
+                "isCompleted": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": false
+                    },
+                    "field": "is_completed",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "createdAt": {
+                    "field": "createdat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "updatedAt": {
+                    "field": "updatedat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "createdat": {
+                    "allowNull": false,
+                    "field": "createdat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "updatedat": {
+                    "allowNull": false,
+                    "field": "updatedat",
+                    "seqType": "Sequelize.DATE"
+                }
+            },
+            "indexes": []
+        },
+        "clubs": {
+            "tableName": "clubs",
+            "schema": {
+                "id": {
+                    "autoIncrement": true,
+                    "primaryKey": true,
+                    "field": "id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "name": {
+                    "allowNull": false,
+                    "unique": true,
+                    "field": "name",
+                    "seqType": "Sequelize.STRING"
+                },
+                "createdAt": {
+                    "field": "createdat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "updatedAt": {
+                    "field": "updatedat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "createdat": {
+                    "allowNull": false,
+                    "field": "createdat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "updatedat": {
+                    "allowNull": false,
+                    "field": "updatedat",
+                    "seqType": "Sequelize.DATE"
+                }
+            },
+            "indexes": []
+        },
+        "players": {
+            "tableName": "players",
+            "schema": {
+                "id": {
+                    "autoIncrement": true,
+                    "primaryKey": true,
+                    "field": "id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "name": {
+                    "allowNull": false,
+                    "field": "name",
+                    "seqType": "Sequelize.STRING"
+                },
+                "nationalId": {
+                    "allowNull": true,
+                    "field": "national_id",
+                    "seqType": "Sequelize.STRING(14)"
+                },
+                "dob": {
+                    "allowNull": false,
+                    "field": "dob",
+                    "seqType": "Sequelize.DATEONLY"
+                },
+                "weight": {
+                    "allowNull": false,
+                    "field": "weight",
+                    "seqType": "Sequelize.DECIMAL(5, 2)"
+                },
+                "seed": {
+                    "allowNull": true,
+                    "field": "seed",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "gender": {
+                    "allowNull": false,
+                    "field": "gender",
+                    "seqType": "Sequelize.ENUM('MALE', 'FEMALE')"
+                },
+                "clubId": {
+                    "allowNull": false,
+                    "field": "club_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "tournamentId": {
+                    "allowNull": true,
+                    "field": "tournament_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "photoUrl": {
+                    "allowNull": true,
+                    "field": "photo_url",
+                    "seqType": "Sequelize.TEXT"
+                },
+                "imageUrl": {
+                    "allowNull": true,
+                    "field": "image_url",
+                    "seqType": "Sequelize.TEXT"
+                },
+                "birthCertificateUrl": {
+                    "allowNull": true,
+                    "field": "birth_certificate_url",
+                    "seqType": "Sequelize.TEXT"
+                },
+                "createdAt": {
+                    "field": "createdat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "updatedAt": {
+                    "field": "updatedat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "createdat": {
+                    "allowNull": false,
+                    "field": "createdat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "updatedat": {
+                    "allowNull": false,
+                    "field": "updatedat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "club_id": {
+                    "allowNull": true,
+                    "references": {
+                        "model": "clubs",
+                        "key": "id"
+                    },
+                    "onDelete": "SET NULL",
+                    "onUpdate": "CASCADE",
+                    "field": "club_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "tournament_id": {
+                    "allowNull": true,
+                    "references": {
+                        "model": "tournaments",
+                        "key": "id"
+                    },
+                    "onDelete": "SET NULL",
+                    "onUpdate": "CASCADE",
+                    "field": "tournament_id",
+                    "seqType": "Sequelize.INTEGER"
+                }
+            },
+            "indexes": []
+        },
+        "matches": {
+            "tableName": "matches",
+            "schema": {
+                "id": {
+                    "autoIncrement": true,
+                    "primaryKey": true,
+                    "field": "id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "tournamentId": {
+                    "allowNull": false,
+                    "field": "tournament_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "categoryId": {
+                    "allowNull": true,
+                    "field": "category_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "type": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": "SINGLE_ELIMINATION"
+                    },
+                    "field": "type",
+                    "seqType": "Sequelize.ENUM('SINGLE_ELIMINATION', 'ROUND_ROBIN', 'FRIENDLY')"
+                },
+                "player1Id": {
+                    "allowNull": false,
+                    "field": "player1_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "player2Id": {
+                    "allowNull": false,
+                    "field": "player2_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "scheduledTime": {
+                    "allowNull": false,
+                    "field": "scheduled_time",
+                    "seqType": "Sequelize.DATE"
+                },
+                "endTime": {
+                    "allowNull": true,
+                    "field": "end_time",
+                    "seqType": "Sequelize.DATE"
+                },
+                "status": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": "SCHEDULED"
+                    },
+                    "field": "status",
+                    "seqType": "Sequelize.ENUM('SCHEDULED', 'PRE_MATCH', 'IN_PROGRESS', 'PAUSED', 'ROUND_END', 'FINISHED', 'MATCH_END', 'CANCELLED')"
+                },
+                "winnerId": {
+                    "allowNull": true,
+                    "field": "winner_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "currentRound": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": 1
+                    },
+                    "field": "current_round",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "totalRounds": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": 3
+                    },
+                    "field": "total_rounds",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "intraClubWarning": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": false
+                    },
+                    "field": "intra_club_warning",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "bracketRound": {
+                    "allowNull": true,
+                    "field": "bracket_round",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "weightClass": {
+                    "allowNull": true,
+                    "field": "weight_class",
+                    "seqType": "Sequelize.STRING"
+                },
+                "scorePlayer1": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": 0
+                    },
+                    "field": "score_player1",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "scorePlayer2": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": 0
+                    },
+                    "field": "score_player2",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "nextMatchId": {
+                    "allowNull": true,
+                    "field": "next_match_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "nextMatchSlot": {
+                    "allowNull": true,
+                    "field": "next_match_slot",
+                    "seqType": "Sequelize.ENUM('PLAYER1', 'PLAYER2')"
+                },
+                "stageName": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": "Round 1"
+                    },
+                    "field": "stage_name",
+                    "seqType": "Sequelize.STRING"
+                },
+                "bracketPosition": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": 0
+                    },
+                    "field": "bracket_position",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "endReason": {
+                    "allowNull": true,
+                    "field": "end_reason",
+                    "seqType": "Sequelize.ENUM('TIME_EXPIRED', 'POINT_GAP', 'WALKOVER', 'INJURY_WITHDRAWAL', 'DISQUALIFICATION', 'REFEREE_STOPPAGE', 'GOLDEN_POINT', 'BYE')"
+                },
+                "hongScore": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": 0
+                    },
+                    "field": "hong_score",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "chungScore": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": 0
+                    },
+                    "field": "chung_score",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "hongPenalties": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": 0
+                    },
+                    "field": "hong_penalties",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "chungPenalties": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": 0
+                    },
+                    "field": "chung_penalties",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "hongInjured": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": false
+                    },
+                    "field": "hong_injured",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "chungInjured": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": false
+                    },
+                    "field": "chung_injured",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "hongExcluded": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": false
+                    },
+                    "field": "hong_excluded",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "chungExcluded": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": false
+                    },
+                    "field": "chung_excluded",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "timerStartTime": {
+                    "allowNull": true,
+                    "field": "timer_start_time",
+                    "seqType": "Sequelize.BIGINT"
+                },
+                "accumulatedPausedTime": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": 0
+                    },
+                    "field": "accumulated_paused_time",
+                    "seqType": "Sequelize.BIGINT"
+                },
+                "roundDurationSeconds": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": 120
+                    },
+                    "field": "round_duration_seconds",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "createdAt": {
+                    "field": "createdat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "updatedAt": {
+                    "field": "updatedat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "createdat": {
+                    "allowNull": false,
+                    "field": "createdat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "updatedat": {
+                    "allowNull": false,
+                    "field": "updatedat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "tournament_id": {
+                    "allowNull": true,
+                    "references": {
+                        "model": "tournaments",
+                        "key": "id"
+                    },
+                    "onDelete": "SET NULL",
+                    "onUpdate": "CASCADE",
+                    "field": "tournament_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "category_id": {
+                    "allowNull": true,
+                    "references": {
+                        "model": "categories",
+                        "key": "id"
+                    },
+                    "onDelete": "SET NULL",
+                    "onUpdate": "CASCADE",
+                    "field": "category_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "player1_id": {
+                    "allowNull": true,
+                    "references": {
+                        "model": "players",
+                        "key": "id"
+                    },
+                    "onDelete": "SET NULL",
+                    "onUpdate": "CASCADE",
+                    "field": "player1_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "player2_id": {
+                    "allowNull": true,
+                    "references": {
+                        "model": "players",
+                        "key": "id"
+                    },
+                    "onDelete": "SET NULL",
+                    "onUpdate": "CASCADE",
+                    "field": "player2_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "winner_id": {
+                    "allowNull": true,
+                    "references": {
+                        "model": "players",
+                        "key": "id"
+                    },
+                    "onDelete": "SET NULL",
+                    "onUpdate": "CASCADE",
+                    "field": "winner_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "next_match_id": {
+                    "allowNull": true,
+                    "references": {
+                        "model": "matches",
+                        "key": "id"
+                    },
+                    "onDelete": "SET NULL",
+                    "onUpdate": "CASCADE",
+                    "field": "next_match_id",
+                    "seqType": "Sequelize.INTEGER"
+                }
+            },
+            "indexes": []
+        },
+        "match_events": {
+            "tableName": "match_events",
+            "schema": {
+                "id": {
+                    "autoIncrement": true,
+                    "primaryKey": true,
+                    "field": "id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "matchId": {
+                    "allowNull": false,
+                    "field": "match_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "type": {
+                    "allowNull": false,
+                    "field": "type",
+                    "seqType": "Sequelize.ENUM('START', 'PAUSE', 'RESUME', 'END_ROUND', 'ADD_POINT', 'REMOVE_POINT', 'AUTO_END_BY_GAP', 'CANCEL', 'FINISHED')"
+                },
+                "playerId": {
+                    "allowNull": true,
+                    "field": "player_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "points": {
+                    "allowNull": true,
+                    "field": "points",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "roundNumber": {
+                    "allowNull": false,
+                    "field": "round_number",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "metadata": {
+                    "allowNull": true,
+                    "field": "metadata",
+                    "seqType": "Sequelize.JSONB"
+                },
+                "createdAt": {
+                    "field": "createdat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "createdat": {
+                    "allowNull": false,
+                    "field": "createdat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "match_id": {
+                    "allowNull": true,
+                    "references": {
+                        "model": "matches",
+                        "key": "id"
+                    },
+                    "onDelete": "SET NULL",
+                    "onUpdate": "CASCADE",
+                    "field": "match_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "player_id": {
+                    "allowNull": true,
+                    "references": {
+                        "model": "players",
+                        "key": "id"
+                    },
+                    "onDelete": "SET NULL",
+                    "onUpdate": "CASCADE",
+                    "field": "player_id",
+                    "seqType": "Sequelize.INTEGER"
+                }
+            },
+            "indexes": []
+        },
+        "audit_logs": {
+            "tableName": "audit_logs",
+            "schema": {
+                "id": {
+                    "autoIncrement": true,
+                    "primaryKey": true,
+                    "field": "id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "actorId": {
+                    "allowNull": false,
+                    "field": "actor_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "action": {
+                    "allowNull": false,
+                    "field": "action",
+                    "seqType": "Sequelize.ENUM('CREATE', 'UPDATE', 'DELETE', 'ASSIGN_ROLE', 'REVOKE_ROLE', 'DEACTIVATE', 'REACTIVATE', 'MARK_COMPLETE', 'SCHEDULE_MATCH', 'RESCHEDULE_MATCH', 'CANCEL_MATCH', 'WALKOVER')"
+                },
+                "entityType": {
+                    "allowNull": false,
+                    "field": "entity_type",
+                    "seqType": "Sequelize.STRING"
+                },
+                "entityId": {
+                    "allowNull": false,
+                    "field": "entity_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "metadata": {
+                    "allowNull": true,
+                    "field": "metadata",
+                    "seqType": "Sequelize.JSONB"
+                },
+                "createdAt": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "internal": true,
+                        "value": "Sequelize.NOW"
+                    },
+                    "field": "createdat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "actor_id": {
+                    "allowNull": true,
+                    "references": {
+                        "model": "users",
+                        "key": "id"
+                    },
+                    "onDelete": "SET NULL",
+                    "onUpdate": "CASCADE",
+                    "field": "actor_id",
+                    "seqType": "Sequelize.INTEGER"
+                }
+            },
+            "indexes": []
+        },
+        "tournament_clubs": {
+            "tableName": "tournament_clubs",
+            "schema": {
+                "tournamentId": {
+                    "allowNull": false,
+                    "field": "tournament_id",
+                    "primaryKey": true,
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "clubId": {
+                    "allowNull": false,
+                    "field": "club_id",
+                    "primaryKey": true,
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "tournament_id": {
+                    "unique": "tournament_clubs_club_id_tournament_id_unique",
+                    "references": {
+                        "model": "tournaments",
+                        "key": "id"
+                    },
+                    "onDelete": "CASCADE",
+                    "onUpdate": "CASCADE",
+                    "field": "tournament_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "club_id": {
+                    "unique": "tournament_clubs_club_id_tournament_id_unique",
+                    "references": {
+                        "model": "clubs",
+                        "key": "id"
+                    },
+                    "onDelete": "CASCADE",
+                    "onUpdate": "CASCADE",
+                    "field": "club_id",
+                    "seqType": "Sequelize.INTEGER"
+                }
+            },
+            "indexes": []
+        },
+        "categories": {
+            "tableName": "categories",
+            "schema": {
+                "id": {
+                    "autoIncrement": true,
+                    "primaryKey": true,
+                    "field": "id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "name": {
+                    "allowNull": false,
+                    "field": "name",
+                    "seqType": "Sequelize.STRING"
+                },
+                "tournamentId": {
+                    "allowNull": false,
+                    "field": "tournament_id",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "bracketDepth": {
+                    "allowNull": false,
+                    "defaultValue": {
+                        "value": 4
+                    },
+                    "field": "bracket_depth",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "gender": {
+                    "allowNull": false,
+                    "field": "gender",
+                    "seqType": "Sequelize.ENUM('MALE', 'FEMALE')"
+                },
+                "minWeight": {
+                    "allowNull": false,
+                    "field": "min_weight",
+                    "seqType": "Sequelize.DECIMAL(5, 2)"
+                },
+                "maxWeight": {
+                    "allowNull": false,
+                    "field": "max_weight",
+                    "seqType": "Sequelize.DECIMAL(5, 2)"
+                },
+                "createdAt": {
+                    "field": "createdat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "updatedAt": {
+                    "field": "updatedat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "createdat": {
+                    "allowNull": false,
+                    "field": "createdat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "updatedat": {
+                    "allowNull": false,
+                    "field": "updatedat",
+                    "seqType": "Sequelize.DATE"
+                },
+                "tournament_id": {
+                    "allowNull": true,
+                    "references": {
+                        "model": "tournaments",
+                        "key": "id"
+                    },
+                    "onDelete": "SET NULL",
+                    "onUpdate": "CASCADE",
+                    "field": "tournament_id",
+                    "seqType": "Sequelize.INTEGER"
+                }
+            },
+            "indexes": []
+        }
+    },
+    "revision": 1
+}

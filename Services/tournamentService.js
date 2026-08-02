@@ -276,10 +276,8 @@ async function updateSettings(id, settings, actorId) {
   }
 
   const excludedPlayers = await findExcludedPlayers(id);
-  return {
-    ...tournament.toJSON(),
-    excludedPlayers,
-  };
+  const response = await buildTournamentResponse(tournament);
+  return { ...response, excludedPlayers };
 }
 
 async function markComplete(id, actorId) {
@@ -305,7 +303,7 @@ async function markComplete(id, actorId) {
     });
   }
 
-  return tournament;
+  return buildTournamentResponse(tournament);
 }
 
 async function remove(id, actorId) {
@@ -354,16 +352,7 @@ async function list(query = {}) {
   }
 
   const tournamentsWithCounts = await Promise.all(
-    tournaments.map(async (t) => {
-      const playerCount = await Player.count({ where: { tournamentId: t.id } });
-      const matchCount = await Match.count({ where: { tournamentId: t.id } });
-      return {
-        ...t.toJSON(),
-        status: computeTournamentStatus(t),
-        playerCount,
-        matchCount,
-      };
-    })
+    tournaments.map(async (t) => buildTournamentResponse(t))
   );
 
   return buildPaginatedResponse(tournamentsWithCounts, tournamentsWithCounts.length, page, pageSize);
@@ -426,17 +415,7 @@ async function getTournamentList(query = {}) {
   });
 
   const tournamentsWithCounts = await Promise.all(
-    rows.map(async (t) => {
-      const playerCount = await Player.count({ where: { tournamentId: t.id } });
-      const matchCount = await Match.count({ where: { tournamentId: t.id } });
-
-      return {
-        ...t.toJSON(),
-        status: computeTournamentStatus(t),
-        playerCount,
-        matchCount,
-      };
-    })
+    rows.map(async (t) => buildTournamentResponse(t))
   );
 
   return buildPaginatedResponse(tournamentsWithCounts, count, page, pageSize);
