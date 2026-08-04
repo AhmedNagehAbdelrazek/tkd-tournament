@@ -10,6 +10,14 @@ const generate = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// ponytail: generate brackets for ALL categories in one call
+const generateAll = async (req, res, next) => {
+  try {
+    const result = await matchmakingService.generateAllBrackets(req.params.id);
+    successResponse(res, result, 201);
+  } catch (err) { next(err); }
+};
+
 const start = async (req, res, next) => {
   try {
     const result = await matchService.startMatch(req.params.id);
@@ -117,4 +125,4 @@ const endRound = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { generate, start, pause, resume, endMatch, cancel, getById, list, schedule, reschedule, walkover, addPoint, removePoint, endRound };
+module.exports = { generate, generateAll, start, pause, resume, endMatch, cancel, getById, list, schedule, reschedule, walkover, addPoint, removePoint, endRound };

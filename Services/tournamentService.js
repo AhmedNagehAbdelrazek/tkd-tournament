@@ -105,7 +105,7 @@ async function create(data, actorId) {
       const males = weights.males || [];
       for (const wc of males) {
         const cat = await Category.create({
-          name: wc.name,
+          name: `${wc.name} - male`,
           tournamentId: tournament.id,
           bracketDepth,
           gender: 'MALE',
@@ -120,7 +120,7 @@ async function create(data, actorId) {
       const females = weights.females || [];
       for (const wc of females) {
         const cat = await Category.create({
-          name: wc.name,
+          name: `${wc.name} - female`,
           tournamentId: tournament.id,
           bracketDepth,
           gender: 'FEMALE',
@@ -212,14 +212,14 @@ async function update(id, data, actorId) {
     if (gender === 'Male' || gender === 'Both') {
       for (const wc of (weights.males || [])) {
         await Category.create({
-          name: wc.name, tournamentId: id, bracketDepth, gender: 'MALE', minWeight: wc.minWeight, maxWeight: wc.maxWeight,
+          name: `${wc.name} - male`, tournamentId: id, bracketDepth, gender: 'MALE', minWeight: wc.minWeight, maxWeight: wc.maxWeight,
         });
       }
     }
     if (gender === 'Female' || gender === 'Both') {
       for (const wc of (weights.females || [])) {
         await Category.create({
-          name: wc.name, tournamentId: id, bracketDepth, gender: 'FEMALE', minWeight: wc.minWeight, maxWeight: wc.maxWeight,
+          name: `${wc.name} - female`, tournamentId: id, bracketDepth, gender: 'FEMALE', minWeight: wc.minWeight, maxWeight: wc.maxWeight,
         });
       }
     }

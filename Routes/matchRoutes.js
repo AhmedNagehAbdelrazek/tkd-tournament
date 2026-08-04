@@ -16,11 +16,14 @@ router.post('/:matchId/live/injury', protect, tkdRoleGuard('MAT_JUDGE'), lc.setI
 router.post('/:matchId/live/exclude', protect, tkdRoleGuard('MAT_JUDGE'), lc.excludePlayer);
 router.get('/:matchId/suggestions', protect, lc.getSuggestions);
 
+// ponytail: bracket generation — single category and bulk
+const adminGuard = require('../middlewares/adminGuard');
+router.post('/generate', protect, tkdRoleGuard('HEAD_JUDGE'), c.generate);
+router.post('/tournament/:id/generate-brackets', protect, adminGuard, c.generateAll);
+
 // --- NOT IN DOC (commented out, maybe use later) ---
-// const adminGuard = require('../middlewares/adminGuard');
 // const validate = require('../middlewares/validatorMiddleware');
 // const { addPointValidation, removePointValidation, endRoundValidation, generateMatchValidation, endMatchValidation, scheduleMatchValidation, rescheduleMatchValidation, walkoverValidation } = require('../utils/validators/matchValidator');
-// router.post('/generate', protect, tkdRoleGuard('HEAD_JUDGE'), generateMatchValidation, validate, c.generate);
 // router.post('/schedule', protect, adminGuard, scheduleMatchValidation, validate, c.schedule);
 // router.get('/:id', protect, rateLimiter(10), c.getById);
 // router.post('/:id/start', protect, tkdRoleGuard('MAT_JUDGE'), c.start);

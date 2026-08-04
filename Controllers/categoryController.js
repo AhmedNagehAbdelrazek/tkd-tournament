@@ -1,6 +1,8 @@
 const { Category, Match, Player, Club, Tournament } = require('../Models');
 const { ApiErrors } = require('../utils/ApiError');
-const { successResponse } = require('../utils/httpResponse');
+const { successResponse, paginatedResponse } = require('../utils/httpResponse');
+const { parsePagination } = require('../utils/pagination');
+const { Op } = require('sequelize');
 
 function shapeMatch(m) {
   return {
@@ -12,6 +14,43 @@ function shapeMatch(m) {
     nextMatchId: m.nextMatchId ? String(m.nextMatchId) : null,
   };
 }
+
+const list = async (req, res, next) => {
+  try {
+    const { page, limit, offset, pageSize } = parsePagination(req.query);
+    const where = {};
+
+    if (req.query.tournamentId) {
+      where.tournamentId = req.query.tournamentId;
+    }
+    if (req.query.gender) {
+      where.gender = req.query.gender.toUpperCase();
+    }
+    if (req.query.search) {
+      where.name = { [Op.iLike]: `%${req.query.search}%` };
+    }
+
+    const { rows, count } = await Category.findAndCountAll({
+      where,
+      include: [{ model: Tournament, attributes: ['id', 'name'], required: false }],
+      order: [['tournamentId', 'ASC'], ['gender', 'ASC'], ['minWeight', 'ASC']],
+      limit,
+      offset,
+    });
+
+    const categories = rows.map((c) => ({
+      id: String(c.id),
+      name: c.name,
+      gender: c.gender,
+      minWeight: c.minWeight,
+      maxWeight: c.maxWeight,
+      bracketDepth: c.bracketDepth,
+      tournament: c.Tournament ? { id: String(c.Tournament.id), name: c.Tournament.name } : null,
+    }));
+
+    paginatedResponse(res, categories, count, page, pageSize);
+  } catch (err) { next(err); }
+};
 
 const getById = async (req, res, next) => {
   try {
@@ -34,11 +73,11 @@ const getById = async (req, res, next) => {
 
     successResponse(res, {
       id: String(category.id),
-      name: category.name,
+      name: `${category.name} - ${category.gender}`,
       bracketDepth: category.bracketDepth,
       matches: matches.map(shapeMatch),
     });
   } catch (err) { next(err); }
 };
 
-module.exports = { getById };
+module.exports = { list, getById };

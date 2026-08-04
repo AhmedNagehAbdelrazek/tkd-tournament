@@ -95,14 +95,15 @@ describe('BracketService', () => {
 
   describe('buildBracketRounds', () => {
     it('builds round-based bracket for 4-player bracket (2 QF -> 1 Final)', () => {
+      // ponytail: convention 1=Final, 2=QF (first round)
       const finalMatch = makeMockMatch({
-        id: 3, stageName: 'Final', bracketRound: 2, bracketPosition: 3, nextMatchId: null, player1Id: null, player2Id: null, winnerId: null,
+        id: 3, stageName: 'FINAL', bracketRound: 1, bracketPosition: 0, nextMatchId: null, player1Id: null, player2Id: null, winnerId: null,
       });
       const qf1 = makeMockMatch({
-        id: 1, stageName: 'Quarterfinal 1', bracketRound: 1, bracketPosition: 1, nextMatchId: 3, nextMatchSlot: 'PLAYER1', winnerId: 1,
+        id: 1, stageName: 'QUARTER_FINAL', bracketRound: 2, bracketPosition: 0, nextMatchId: 3, nextMatchSlot: 'PLAYER1', winnerId: 1,
       });
       const qf2 = makeMockMatch({
-        id: 2, stageName: 'Quarterfinal 2', bracketRound: 1, bracketPosition: 2, nextMatchId: 3, nextMatchSlot: 'PLAYER2', winnerId: 2,
+        id: 2, stageName: 'QUARTER_FINAL', bracketRound: 2, bracketPosition: 1, nextMatchId: 3, nextMatchSlot: 'PLAYER2', winnerId: 2,
       });
 
       const result = buildBracketRounds([qf1, qf2, finalMatch]);
@@ -111,8 +112,8 @@ describe('BracketService', () => {
       expect(result.totalRounds).toBe(2);
       expect(result.bracket).toHaveProperty('Round 1');
       expect(result.bracket).toHaveProperty('Round 2');
-      expect(result.bracket['Round 1']).toHaveLength(2);
-      expect(result.bracket['Round 2']).toHaveLength(1);
+      expect(result.bracket['Round 1']).toHaveLength(1);
+      expect(result.bracket['Round 2']).toHaveLength(2);
     });
 
     it('returns null for empty matches array', () => {
@@ -146,22 +147,23 @@ describe('BracketService', () => {
 
   describe('determineCurrentRound', () => {
     it('returns highest round number with active match', () => {
+      // ponytail: convention 1=Final, 2=Semi, 3=QF (first round)
       const matches = [
-        makeMockMatch({ id: 1, bracketRound: 1, stageName: 'Quarterfinal', status: MATCH_STATUS.FINISHED }),
-        makeMockMatch({ id: 2, bracketRound: 1, stageName: 'Quarterfinal', status: MATCH_STATUS.FINISHED }),
-        makeMockMatch({ id: 3, bracketRound: 2, stageName: 'Semifinal', status: MATCH_STATUS.SCHEDULED }),
-        makeMockMatch({ id: 4, bracketRound: 3, stageName: 'Final', status: MATCH_STATUS.SCHEDULED }),
+        makeMockMatch({ id: 1, bracketRound: 3, stageName: 'QUARTER_FINAL', status: MATCH_STATUS.FINISHED }),
+        makeMockMatch({ id: 2, bracketRound: 3, stageName: 'QUARTER_FINAL', status: MATCH_STATUS.FINISHED }),
+        makeMockMatch({ id: 3, bracketRound: 2, stageName: 'SEMI_FINAL', status: MATCH_STATUS.SCHEDULED }),
+        makeMockMatch({ id: 4, bracketRound: 1, stageName: 'FINAL', status: MATCH_STATUS.SCHEDULED }),
       ];
 
       const round = determineCurrentRound(matches);
-      expect(round).toBe(3);
+      expect(round).toBe(2);
     });
 
     it('returns null for all finished matches (tournament complete)', () => {
       const matches = [
-        makeMockMatch({ id: 1, bracketRound: 1, stageName: 'Quarterfinal', status: MATCH_STATUS.FINISHED }),
-        makeMockMatch({ id: 2, bracketRound: 2, stageName: 'Semifinal', status: MATCH_STATUS.FINISHED }),
-        makeMockMatch({ id: 3, bracketRound: 3, stageName: 'Final', status: MATCH_STATUS.FINISHED }),
+        makeMockMatch({ id: 1, bracketRound: 3, stageName: 'QUARTER_FINAL', status: MATCH_STATUS.FINISHED }),
+        makeMockMatch({ id: 2, bracketRound: 2, stageName: 'SEMI_FINAL', status: MATCH_STATUS.FINISHED }),
+        makeMockMatch({ id: 3, bracketRound: 1, stageName: 'FINAL', status: MATCH_STATUS.FINISHED }),
       ];
 
       const round = determineCurrentRound(matches);
@@ -173,15 +175,16 @@ describe('BracketService', () => {
     });
 
     it('identifies IN_PROGRESS round correctly', () => {
+      // ponytail: convention 1=Final, 2=Semi, 3=QF
       const matches = [
-        makeMockMatch({ id: 1, bracketRound: 1, stageName: 'Quarterfinal', status: MATCH_STATUS.FINISHED }),
-        makeMockMatch({ id: 2, bracketRound: 1, stageName: 'Quarterfinal', status: MATCH_STATUS.FINISHED }),
-        makeMockMatch({ id: 3, bracketRound: 2, stageName: 'Semifinal', status: MATCH_STATUS.IN_PROGRESS }),
-        makeMockMatch({ id: 4, bracketRound: 3, stageName: 'Final', status: MATCH_STATUS.SCHEDULED }),
+        makeMockMatch({ id: 1, bracketRound: 3, stageName: 'QUARTER_FINAL', status: MATCH_STATUS.FINISHED }),
+        makeMockMatch({ id: 2, bracketRound: 3, stageName: 'QUARTER_FINAL', status: MATCH_STATUS.FINISHED }),
+        makeMockMatch({ id: 3, bracketRound: 2, stageName: 'SEMI_FINAL', status: MATCH_STATUS.IN_PROGRESS }),
+        makeMockMatch({ id: 4, bracketRound: 1, stageName: 'FINAL', status: MATCH_STATUS.SCHEDULED }),
       ];
 
       const round = determineCurrentRound(matches);
-      expect(round).toBe(3);
+      expect(round).toBe(2);
     });
 
     it('defaults bracketRound to 1 when null', () => {

@@ -1,5 +1,6 @@
-const { Player, Match, Club, Tournament, MatchEvent, TournamentClub } = require('../Models');
+const { Player, Match, Club, Tournament, Category, MatchEvent, TournamentClub } = require('../Models');
 const { ApiErrors } = require('../utils/ApiError');
+const { Op } = require('sequelize');
 
 function calculateClubPercentages(players) {
   const counts = {};
@@ -60,25 +61,34 @@ function greedyMatch(players, clubPercentages, relaxAvoidance) {
   return matches;
 }
 
-// ponytail: next power of 2 for bracket sizing
-function nextPowerOf2(n) {
+// ponytail: floor to nearest power of 2 — clean bracket, no BYEs
+function prevPowerOf2(n) {
   let p = 1;
-  while (p < n) p *= 2;
+  while (p * 2 <= n) p *= 2;
   return p;
 }
 
-// ponytail: generate full bracket tree with all rounds and BYE support
+// ponytail: resolve weight range — accepts direct min/max or looks up by name in settings
+function resolveWeightRange(tournament, data) {
+  if (data.minWeight !== undefined && data.maxWeight !== undefined) {
+    return { min: parseFloat(data.minWeight), max: parseFloat(data.maxWeight) };
+  }
+  const genderClasses = tournament.settings?.weightClasses?.[data.gender] || [];
+  const wc = genderClasses.find((w) => w.name === data.weightClass);
+  if (!wc) {
+    throw ApiErrors.badRequest(`Weight class "${data.weightClass}" not found in ${data.gender} division`);
+  }
+  return { min: parseFloat(wc.min), max: parseFloat(wc.max) };
+}
+
+// ponytail: generate full bracket tree — round 1 = Final, round N = first round
 async function generateBracket(data) {
   const tournament = await Tournament.findByPk(data.tournamentId);
   if (!tournament) {
     throw ApiErrors.notFound('Tournament not found');
   }
 
-  const genderClasses = tournament.settings?.weightClasses?.[data.gender] || [];
-  const weightClass = genderClasses.find((wc) => wc.name === data.weightClass);
-  if (!weightClass) {
-    throw ApiErrors.badRequest(`Weight class "${data.weightClass}" not found in ${data.gender} division`);
-  }
+  const range = resolveWeightRange(tournament, data);
 
   // ponytail: only players from registered clubs
   const registeredClubs = await TournamentClub.findAll({
@@ -88,74 +98,77 @@ async function generateBracket(data) {
   });
   const registeredClubIds = registeredClubs.map((rc) => rc.clubId);
 
-  const players = await Player.findAll({
+  const allPlayers = await Player.findAll({
     where: {
       tournamentId: data.tournamentId,
       gender: data.gender,
-      weight: { [require('sequelize').Op.between]: [weightClass.min, weightClass.max] },
+      weight: { [Op.between]: [range.min, range.max] },
       ...(registeredClubIds.length > 0 ? { clubId: registeredClubIds } : {}),
     },
     include: [{ model: Club, attributes: ['name'] }],
     order: [['name', 'ASC']],
   });
 
-  if (players.length < 2) {
+  if (allPlayers.length < 2) {
     return { matches: [], totalMatches: 0, warnings: [], reason: 'Insufficient players for bracket' };
   }
 
-  // ponytail: pair first round players
+  // ponytail: trim to floor power of 2 — excess players excluded, no BYEs
+  const bracketSize = prevPowerOf2(allPlayers.length);
+  const players = allPlayers.slice(0, bracketSize);
+  const excluded = allPlayers.slice(bracketSize);
+
+  const warnings = [];
+  for (const p of excluded) {
+    warnings.push({ playerId: p.id, playerName: p.name, reason: 'excluded_bracket_trim' });
+  }
+
+  // ponytail: pair first round players with club avoidance
   const clubPercentages = calculateClubPercentages(players);
   const relaxAvoidance = Object.values(clubPercentages).some((pct) => pct > 0.5);
   const pairs = greedyMatch(players, clubPercentages, relaxAvoidance);
 
-  // ponytail: calculate bracket structure
-  const firstRoundCount = nextPowerOf2(players.length);
-  const totalRounds = Math.log2(firstRoundCount);
-  const warnings = [];
+  const totalRounds = Math.log2(bracketSize);
   const matches = [];
 
   const baseTime = new Date();
   baseTime.setSeconds(0, 0);
 
-  // ponytail: create all rounds (from final backwards)
+  // ponytail: round naming — index 0 = FINAL, reversed numbering (1=Final)
   const roundNames = ['FINAL', 'SEMI_FINAL', 'QUARTER_FINAL', 'ROUND_OF_16', 'ROUND_OF_32'];
-  const rounds = [];
 
-  for (let round = totalRounds; round >= 1; round--) {
-    const matchCount = firstRoundCount / Math.pow(2, totalRounds - round);
-    const roundName = roundNames[totalRounds - round] || `ROUND_${round}`;
-    rounds.push({ round, roundName, matchCount });
-  }
-
-  // ponytail: create all matches for all rounds (empty slots for now)
+  // ponytail: create all rounds — round 1 = Final (fewest), round totalRounds = first round (most)
   const roundMatches = {};
-  for (const r of rounds) {
-    roundMatches[r.round] = [];
-    for (let pos = 0; pos < r.matchCount; pos++) {
+  for (let round = totalRounds; round >= 1; round--) {
+    const matchCount = bracketSize / Math.pow(2, totalRounds - round + 1);
+    const roundName = roundNames[round - 1] || `ROUND_${round}`;
+    roundMatches[round] = [];
+    for (let pos = 0; pos < matchCount; pos++) {
       const match = await Match.create({
         tournamentId: data.tournamentId,
+        categoryId: data.categoryId || null,
         type: data.matchType || 'SINGLE_ELIMINATION',
         player1Id: null,
         player2Id: null,
-        scheduledTime: new Date(baseTime.getTime() + r.round * 3600000),
+        scheduledTime: new Date(baseTime.getTime() + round * 3600000),
         status: 'SCHEDULED',
-        bracketRound: r.round,
-        weightClass: data.weightClass,
-        stageName: r.roundName,
+        bracketRound: round,
+        weightClass: data.weightClass || `${range.min}-${range.max}kg`,
+        stageName: roundName,
         bracketPosition: pos,
         hongScore: 0,
         chungScore: 0,
         scorePlayer1: 0,
         scorePlayer2: 0,
       });
-      roundMatches[r.round].push(match);
+      roundMatches[round].push(match);
     }
   }
 
-  // ponytail: link matches (feeders -> next round)
-  for (let round = 1; round < totalRounds; round++) {
+  // ponytail: link matches — higher rounds (QF) feed into lower rounds (SF → Final)
+  for (let round = totalRounds; round > 1; round--) {
     const currentRound = roundMatches[round];
-    const nextRound = roundMatches[round + 1];
+    const nextRound = roundMatches[round - 1];
     for (let i = 0; i < currentRound.length; i++) {
       const nextMatchIndex = Math.floor(i / 2);
       const slot = i % 2 === 0 ? 'PLAYER1' : 'PLAYER2';
@@ -166,46 +179,17 @@ async function generateBracket(data) {
     }
   }
 
-  // ponytail: fill first round with players and BYEs
-  const byesNeeded = firstRoundCount - players.length;
-  for (let i = 0; i < roundMatches[1].length; i++) {
-    const match = roundMatches[1][i];
-    const pairIndex = i;
-
-    if (pairIndex < pairs.length) {
-      // ponytail: normal match with two players
+  // ponytail: fill first round (highest round number) with paired players
+  const firstRound = roundMatches[totalRounds];
+  for (let i = 0; i < firstRound.length; i++) {
+    const match = firstRound[i];
+    if (i < pairs.length) {
       await match.update({
-        player1Id: pairs[pairIndex].p1.id,
-        player2Id: pairs[pairIndex].p2.id,
+        player1Id: pairs[i].p1.id,
+        player2Id: pairs[i].p2.id,
       });
-      if (pairs[pairIndex].intraClub) {
+      if (pairs[i].intraClub) {
         warnings.push({ matchId: match.id, reason: 'intra_club_match' });
-      }
-    } else if (pairIndex < pairs.length + byesNeeded) {
-      // ponytail: BYE match — player gets automatic advancement
-      const byePlayerIndex = players.length - (byesNeeded - (pairIndex - pairs.length));
-      if (byePlayerIndex >= 0 && byePlayerIndex < players.length) {
-        const byePlayer = players[byePlayerIndex];
-        await match.update({
-          player1Id: byePlayer.id,
-          player2Id: null,
-          status: 'FINISHED',
-          winnerId: byePlayer.id,
-          endReason: 'BYE',
-          endTime: new Date(),
-        });
-        // ponytail: auto-advance BYE winner to next round
-        if (match.nextMatchId) {
-          const nextMatch = await Match.findByPk(match.nextMatchId);
-          if (nextMatch) {
-            if (match.nextMatchSlot === 'PLAYER1') {
-              await nextMatch.update({ player1Id: byePlayer.id });
-            } else {
-              await nextMatch.update({ player2Id: byePlayer.id });
-            }
-          }
-        }
-        warnings.push({ matchId: match.id, reason: 'bye', playerName: byePlayer.name });
       }
     }
   }
@@ -213,6 +197,38 @@ async function generateBracket(data) {
   matches.push(...Object.values(roundMatches).flat());
 
   return { matches, totalMatches: matches.length, warnings };
+}
+
+// ponytail: generate brackets for ALL categories in a tournament at once
+async function generateAllBrackets(tournamentId) {
+  const tournament = await Tournament.findByPk(tournamentId);
+  if (!tournament) {
+    throw ApiErrors.notFound('Tournament not found');
+  }
+
+  const categories = await Category.findAll({ where: { tournamentId } });
+  const results = {};
+  const allWarnings = [];
+  let totalMatches = 0;
+
+  for (const cat of categories) {
+    const result = await generateBracket({
+      tournamentId,
+      gender: cat.gender,
+      minWeight: cat.minWeight,
+      maxWeight: cat.maxWeight,
+      categoryId: cat.id,
+    });
+    results[cat.id] = {
+      categoryName: cat.name,
+      gender: cat.gender,
+      ...result,
+    };
+    allWarnings.push(...(result.warnings || []));
+    totalMatches += result.totalMatches;
+  }
+
+  return { categories: results, totalMatches, totalWarnings: allWarnings.length, warnings: allWarnings };
 }
 
 async function getMatchDetail(id) {
@@ -229,4 +245,4 @@ async function getMatchDetail(id) {
   return match;
 }
 
-module.exports = { generateBracket, getMatchDetail, calculateClubPercentages, greedyMatch };
+module.exports = { generateBracket, generateAllBrackets, getMatchDetail, calculateClubPercentages, greedyMatch, prevPowerOf2 };
