@@ -3,6 +3,7 @@ const sequelize = require('../config/database');
 const { ApiErrors } = require('../utils/ApiError');
 const { parsePagination, buildPaginatedResponse } = require('../utils/pagination');
 const { logAudit, AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } = require('../Services/auditService');
+const { generateAllBrackets } = require('../Services/matchmakingService');
 const { Op } = require('sequelize');
 
 function buildExclusionReason(player, tournament) {
@@ -156,7 +157,10 @@ async function create(data, actorId) {
       });
     }
 
-    return buildTournamentResponse(tournament, categoryRecords);
+    // ponytail: auto-generate brackets for all categories — empty if no players registered yet
+    const brackets = await generateAllBrackets(tournament.id);
+    const response = buildTournamentResponse(tournament, categoryRecords);
+    return { ...response, brackets };
   }
 
   if (actorId) {
@@ -236,6 +240,8 @@ async function update(id, data, actorId) {
 
   if (datesOrCategoriesChanged) {
     await Match.destroy({ where: { tournamentId: id } });
+    // ponytail: auto-regenerate brackets after category/settings change
+    await generateAllBrackets(id);
   }
 
   if (actorId) {

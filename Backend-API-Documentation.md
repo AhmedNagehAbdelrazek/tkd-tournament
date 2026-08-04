@@ -63,7 +63,7 @@ Fetches a paginated list of tournaments.
 - **Response:** `PaginatedResponse<Tournament>`
 
 ### `POST /tournaments`
-Creates a new tournament and generates brackets.
+Creates a new tournament and auto-generates brackets for all categories.
 - **Body:**
   ```json
   {
@@ -81,7 +81,34 @@ Creates a new tournament and generates brackets.
     }
   }
   ```
-- **Response (201):** `Tournament` object.
+- **Response (201):**
+  ```json
+  {
+    "id": "string",
+    "name": "string",
+    "status": "upcoming",
+    "startDate": "ISO8601",
+    "endDate": "ISO8601",
+    "categories": ["cat_id_1", "cat_id_2"],
+    "bracketDepth": 3,
+    "registeredPlayers": 0,
+    "matchesPlayed": 0,
+    "brackets": {
+      "categories": {
+        "1": {
+          "categoryName": "Male -58kg - male",
+          "gender": "MALE",
+          "matches": [],
+          "totalMatches": 0,
+          "warnings": []
+        }
+      },
+      "totalMatches": 0,
+      "totalWarnings": 0,
+      "warnings": []
+    }
+  }
+  ```
 
 ### `GET /tournaments/:id`
 Fetches a single tournament summary.
@@ -197,6 +224,74 @@ Fetches a global list of matches across all tournaments (for the director's dash
     "scheduledAt": "ISO8601"
   }
   ```
+
+---
+
+## 🏆 6.1 Bracket Generation
+
+### `POST /matches/generate`
+Generates a single-elimination bracket for one weight class. Trims players to nearest power of 2 (floor) — no BYEs.
+- **Auth:** `HEAD_JUDGE`
+- **Body:**
+  ```json
+  {
+    "tournamentId": "number",
+    "gender": "MALE" | "FEMALE",
+    "weightClass": "string",
+    "matchType": "SINGLE_ELIMINATION"
+  }
+  ```
+- **Response (201):**
+  ```json
+  {
+    "matches": [
+      {
+        "id": "number",
+        "bracketRound": 1,
+        "stageName": "FINAL",
+        "bracketPosition": 0,
+        "nextMatchId": null,
+        "nextMatchSlot": null,
+        "player1Id": null,
+        "player2Id": null,
+        "status": "SCHEDULED",
+        "categoryId": "number",
+        "weightClass": "string"
+      }
+    ],
+    "totalMatches": 7,
+    "warnings": [
+      { "playerId": 10, "playerName": "Player X", "reason": "excluded_bracket_trim" }
+    ]
+  }
+  ```
+
+### `POST /matches/tournament/:id/generate-brackets`
+Generates brackets for ALL categories in a tournament at once.
+- **Auth:** `Admin`
+- **Response (201):**
+  ```json
+  {
+    "categories": {
+      "1": {
+        "categoryName": "Male -58kg - male",
+        "gender": "MALE",
+        "matches": [...],
+        "totalMatches": 7,
+        "warnings": []
+      }
+    },
+    "totalMatches": 14,
+    "totalWarnings": 0,
+    "warnings": []
+  }
+  ```
+
+**Bracket Convention:**
+- Round numbering reversed: `1` = Final, `2` = Semi-Final, `3` = Quarter-Final, etc.
+- Each match has `nextMatchId` pointing to the next round match (null on Final).
+- `nextMatchSlot` (`PLAYER1` | `PLAYER2`) indicates which slot the winner fills.
+- Player count trimmed to `floor(log2(N))` — clean bracket, no BYEs, no byes.
 
 ---
 
