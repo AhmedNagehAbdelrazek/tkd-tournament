@@ -6,7 +6,7 @@ function getAuthToken(overrides = {}) {
   const payload = {
     id: 1,
     username: overrides.username || 'admin',
-    globalRole: overrides.role || 'admin',
+    role: overrides.role || 'super_admin',
   };
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
 }

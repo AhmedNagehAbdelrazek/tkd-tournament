@@ -30,7 +30,7 @@ async function signup({ email, password, name, fullName, role }) {
   });
 
   const token = jwt.sign(
-    { id: user.id, email: user.email, globalRole: user.role },
+    { id: user.id, email: user.email, role: user.role },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRY }
   );
@@ -60,7 +60,7 @@ async function login({ email, password }) {
   }
 
   const token = jwt.sign(
-    { id: user.id, email: user.email, globalRole: user.role},
+    { id: user.id, email: user.email, role: user.role },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRY }
   );

@@ -5,7 +5,7 @@ const { logAudit, AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } = require('../Services/aud
 const { ROLES } = require('../config/constants');
 const { Op } = require('sequelize');
 
-const TKD_ROLES = ['ADMIN', 'HEAD_JUDGE', 'MAT_JUDGE', 'SCOREKEEPER'];
+const ASSIGNABLE_ROLES = [ROLES.SUPER_ADMIN, ROLES.COACH, ROLES.CUSTOMER];
 
 async function listUsers(query = {}) {
   const { page, limit, offset, pageSize } = parsePagination(query);
@@ -20,8 +20,8 @@ async function listUsers(query = {}) {
   if (query.isActive !== undefined) {
     where.isActive = query.isActive === 'true';
   }
-  if (query.tkdRole) {
-    where.tkdRole = query.tkdRole;
+  if (query.role) {
+    where.role = query.role;
   }
 
   const { rows, count } = await User.findAndCountAll({
@@ -35,7 +35,7 @@ async function listUsers(query = {}) {
   return buildPaginatedResponse(rows, count, page, pageSize);
 }
 
-async function assignRole(userId, tkdRole, actorId) {
+async function assignRole(userId, role, actorId) {
   const user = await User.findByPk(userId);
   if (!user) {
     throw ApiErrors.notFound('User not found');
@@ -44,24 +44,24 @@ async function assignRole(userId, tkdRole, actorId) {
     throw ApiErrors.forbidden('Cannot modify super admin roles');
   }
 
-  if (tkdRole !== null && !TKD_ROLES.includes(tkdRole)) {
-    throw ApiErrors.badRequest(`Invalid TKD role: ${tkdRole}`);
+  if (!ASSIGNABLE_ROLES.includes(role)) {
+    throw ApiErrors.badRequest(`Invalid role: ${role}`);
   }
 
-  const previousRole = user.tkdRole;
-  await user.update({ tkdRole });
+  const previousRole = user.role;
+  await user.update({ role });
 
   if (actorId) {
     logAudit({
       actorId,
-      action: tkdRole ? AUDIT_ACTIONS.ASSIGN_ROLE : AUDIT_ACTIONS.REVOKE_ROLE,
+      action: AUDIT_ACTIONS.ASSIGN_ROLE,
       entityType: AUDIT_ENTITY_TYPES.USER,
       entityId: userId,
-      metadata: { previousRole, newRole: tkdRole, userName: user.name, userEmail: user.email },
+      metadata: { previousRole, newRole: role, userName: user.name, userEmail: user.email },
     });
   }
 
-  return { id: user.id, name: user.name, email: user.email, tkdRole: user.tkdRole };
+  return { id: user.id, name: user.name, email: user.email, role: user.role };
 }
 
 async function deactivateUser(userId, actorId) {

@@ -15,7 +15,7 @@ function createSocketServer(httpServer) {
   const liveMatches = io.of('/live-matches');
 
   liveMatches.on('connection', (socket) => {
-    console.log('TKD client connected:', socket.id, 'role:', socket.tkdRole);
+    console.log('TKD client connected:', socket.id, 'role:', socket.role);
 
     socket.on('disconnect', () => {
       console.log('TKD client disconnected:', socket.id);

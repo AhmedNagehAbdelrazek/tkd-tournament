@@ -47,11 +47,6 @@ User.init(
             allowNull: true,
             defaultValue: true,
         },
-        tkdRole: {
-            type: DataTypes.ENUM(Object.values(ROLES)),
-            allowNull: true,
-            field: 'tkd_role',
-        }
     },
     {
         sequelize,

@@ -38,9 +38,9 @@ async function validateDatabase() {
 
   try {
     await sequelize.authenticate();
-    if (process.env.NODE_ENV === 'test') {
-      await sequelize.sync();
-    }
+    // if (process.env.NODE_ENV === 'test') {
+      await sequelize.sync({alter:true});
+    // }
     console.log('Connection to database established successfully.');
   } catch (error) {
     console.error('Unable to connect to the database:', error);

@@ -1,24 +1,26 @@
 const router = require('express').Router();
 const protect = require('../middlewares/protect');
-const { tkdRoleGuard } = require('../middlewares/protect');
+const { roleGuard } = require('../middlewares/roleGuard');
 const rateLimiter = require('../middlewares/rateLimiter');
 const lc = require('../Controllers/liveMatchController');
 const c = require('../Controllers/matchController');
 
+const staffGuard = roleGuard(['super_admin', 'coach']);
+
 // --- IN DOC ---
 router.get('/', protect, c.list);
 router.get('/:matchId/live', protect, lc.getLiveMatch);
-router.post('/:matchId/live/action', protect, tkdRoleGuard('MAT_JUDGE'), lc.performAction);
-router.post('/:matchId/live/points', protect, tkdRoleGuard('MAT_JUDGE'), rateLimiter(2), lc.addPoints);
-router.post('/:matchId/live/points/undo', protect, tkdRoleGuard('MAT_JUDGE'), rateLimiter(2), lc.undoPoints);
-router.post('/:matchId/live/penalty', protect, tkdRoleGuard('MAT_JUDGE'), rateLimiter(1), lc.addPenalty);
-router.post('/:matchId/live/injury', protect, tkdRoleGuard('MAT_JUDGE'), lc.setInjury);
-router.post('/:matchId/live/exclude', protect, tkdRoleGuard('MAT_JUDGE'), lc.excludePlayer);
+router.post('/:matchId/live/action', protect, staffGuard, lc.performAction);
+router.post('/:matchId/live/points', protect, staffGuard, rateLimiter(2), lc.addPoints);
+router.post('/:matchId/live/points/undo', protect, staffGuard, rateLimiter(2), lc.undoPoints);
+router.post('/:matchId/live/penalty', protect, staffGuard, rateLimiter(1), lc.addPenalty);
+router.post('/:matchId/live/injury', protect, staffGuard, lc.setInjury);
+router.post('/:matchId/live/exclude', protect, staffGuard, lc.excludePlayer);
 router.get('/:matchId/suggestions', protect, lc.getSuggestions);
 
 // ponytail: bracket generation — single category and bulk
 const adminGuard = require('../middlewares/adminGuard');
-router.post('/generate', protect, tkdRoleGuard('HEAD_JUDGE'), c.generate);
+router.post('/generate', protect, staffGuard, c.generate);
 router.post('/tournament/:id/generate-brackets', protect, adminGuard, c.generateAll);
 
 // --- NOT IN DOC (commented out, maybe use later) ---
@@ -26,15 +28,15 @@ router.post('/tournament/:id/generate-brackets', protect, adminGuard, c.generate
 // const { addPointValidation, removePointValidation, endRoundValidation, generateMatchValidation, endMatchValidation, scheduleMatchValidation, rescheduleMatchValidation, walkoverValidation } = require('../utils/validators/matchValidator');
 // router.post('/schedule', protect, adminGuard, scheduleMatchValidation, validate, c.schedule);
 // router.get('/:id', protect, rateLimiter(10), c.getById);
-// router.post('/:id/start', protect, tkdRoleGuard('MAT_JUDGE'), c.start);
-// router.post('/:id/pause', protect, tkdRoleGuard('MAT_JUDGE'), c.pause);
-// router.post('/:id/resume', protect, tkdRoleGuard('MAT_JUDGE'), c.resume);
-// router.post('/:id/end', protect, tkdRoleGuard('MAT_JUDGE'), endMatchValidation, validate, c.endMatch);
+// router.post('/:id/start', protect, staffGuard, c.start);
+// router.post('/:id/pause', protect, staffGuard, c.pause);
+// router.post('/:id/resume', protect, staffGuard, c.resume);
+// router.post('/:id/end', protect, staffGuard, endMatchValidation, validate, c.endMatch);
 // router.post('/:id/cancel', protect, c.cancel);
 // router.put('/:id/reschedule', protect, adminGuard, rescheduleMatchValidation, validate, c.reschedule);
 // router.post('/:id/walkover', protect, adminGuard, walkoverValidation, validate, c.walkover);
-// router.post('/:id/points', protect, tkdRoleGuard('MAT_JUDGE'), rateLimiter(2), addPointValidation, validate, c.addPoint);
-// router.post('/:id/remove-points', protect, tkdRoleGuard('MAT_JUDGE'), rateLimiter(2), removePointValidation, validate, c.removePoint);
-// router.post('/:id/end-round', protect, tkdRoleGuard('MAT_JUDGE'), rateLimiter(1), endRoundValidation, validate, c.endRound);
+// router.post('/:id/points', protect, staffGuard, rateLimiter(2), addPointValidation, validate, c.addPoint);
+// router.post('/:id/remove-points', protect, staffGuard, rateLimiter(2), removePointValidation, validate, c.removePoint);
+// router.post('/:id/end-round', protect, staffGuard, rateLimiter(1), endRoundValidation, validate, c.endRound);
 
 module.exports = router;

@@ -13,7 +13,7 @@ router.put('/:id', protect, adminGuard, updateTournamentValidation, validate, c.
 router.delete('/:id', protect, adminGuard, deleteTournamentValidation, validate, c.remove);
 
 // --- NOT IN DOC (commented out, maybe use later) ---
-// const { tkdRoleGuard } = require('../middlewares/protect');
+// const { roleGuard } = require('../middlewares/roleGuard');
 // const bc = require('../Controllers/bracketController');
 // const tc = require('../Controllers/tournamentClubController');
 // const { updateSettingsValidation, markCompleteValidation } = require('../utils/validators/tournamentValidator');
@@ -25,6 +25,6 @@ router.delete('/:id', protect, adminGuard, deleteTournamentValidation, validate,
 // router.post('/:id/complete', protect, adminGuard, markCompleteValidation, validate, c.markComplete);
 // router.post('/:id/clubs', protect, adminGuard, tc.registerClub);
 // router.delete('/:id/clubs/:clubId', protect, adminGuard, tc.deregisterClub);
-// router.post('/:id/bracket/override', protect, tkdRoleGuard('HEAD_JUDGE'), overrideValidation, validate, bc.overrideMatchSlot);
+// router.post('/:id/bracket/override', protect, roleGuard(['super_admin', 'coach']), overrideValidation, validate, bc.overrideMatchSlot);
 
 module.exports = router;

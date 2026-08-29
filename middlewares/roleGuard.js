@@ -6,7 +6,7 @@ function roleGuard(allowedRoles) {
       return next(ApiErrors.unauthorized('Authentication required.'));
     }
 
-    if (!allowedRoles.includes(req.user.globalRole)) {
+    if (!allowedRoles.includes(req.user.role)) {
       return next(
         ApiErrors.forbidden(
           'Access denied. You do not have the required permissions.'

@@ -1,7 +1,12 @@
 const scoringService = require('../../Services/scoringService');
 const matchService = require('../../Services/matchService');
-// ponytail: one role constant — TKD roles merged into ROLES
 const { ROLES } = require('../../config/constants');
+
+const SCORING_ROLES = [ROLES.SUPER_ADMIN, ROLES.COACH];
+
+function isScoringRole(socket) {
+  return socket.role && SCORING_ROLES.includes(socket.role);
+}
 
 function registerScoringHandlers(io, socket) {
   socket.on('join_match', async ({ matchId }, callback) => {
@@ -29,8 +34,8 @@ function registerScoringHandlers(io, socket) {
   });
 
   socket.on('MATCH:ADD_POINT', async (data, callback) => {
-    if (!socket.tkdRole || socket.tkdRole !== ROLES.MAT_JUDGE) {
-      if (callback) callback({ success: false, error: { code: 'FORBIDDEN', message: 'Only MAT_JUDGE can score' } });
+    if (!isScoringRole(socket)) {
+      if (callback) callback({ success: false, error: { code: 'FORBIDDEN', message: 'Only super_admin or coach can score' } });
       return;
     }
     try {
@@ -56,8 +61,8 @@ function registerScoringHandlers(io, socket) {
   });
 
   socket.on('MATCH:REMOVE_POINT', async (data, callback) => {
-    if (!socket.tkdRole || socket.tkdRole !== ROLES.MAT_JUDGE) {
-      if (callback) callback({ success: false, error: { code: 'FORBIDDEN', message: 'Only MAT_JUDGE can score' } });
+    if (!isScoringRole(socket)) {
+      if (callback) callback({ success: false, error: { code: 'FORBIDDEN', message: 'Only super_admin or coach can score' } });
       return;
     }
     try {
@@ -76,8 +81,8 @@ function registerScoringHandlers(io, socket) {
   });
 
   socket.on('MATCH:END_ROUND', async (data, callback) => {
-    if (!socket.tkdRole || socket.tkdRole !== ROLES.MAT_JUDGE) {
-      if (callback) callback({ success: false, error: { code: 'FORBIDDEN', message: 'Only MAT_JUDGE can end rounds' } });
+    if (!isScoringRole(socket)) {
+      if (callback) callback({ success: false, error: { code: 'FORBIDDEN', message: 'Only super_admin or coach can end rounds' } });
       return;
     }
     try {
@@ -94,8 +99,8 @@ function registerScoringHandlers(io, socket) {
   });
 
   socket.on('MATCH:END', async (data, callback) => {
-    if (!socket.tkdRole || socket.tkdRole !== ROLES.MAT_JUDGE) {
-      if (callback) callback({ success: false, error: { code: 'FORBIDDEN', message: 'Only MAT_JUDGE can end matches' } });
+    if (!isScoringRole(socket)) {
+      if (callback) callback({ success: false, error: { code: 'FORBIDDEN', message: 'Only super_admin or coach can end matches' } });
       return;
     }
     try {

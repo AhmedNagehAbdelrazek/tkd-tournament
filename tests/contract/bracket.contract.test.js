@@ -6,7 +6,7 @@ const app = createApp();
 const agent = request.agent(app);
 
 function adminHeaders() {
-  return { ...authHeader(tkdToken({ tkdRole: 'ADMIN' })), 'Content-Type': 'application/json' };
+  return { ...authHeader(tkdToken({ role: 'super_admin' })), 'Content-Type': 'application/json' };
 }
 
 describe('Bracket Contract Tests', () => {

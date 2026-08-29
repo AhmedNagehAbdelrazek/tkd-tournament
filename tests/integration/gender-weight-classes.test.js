@@ -7,7 +7,7 @@ const app = createApp();
 const agent = request.agent(app);
 
 function adminHeaders() {
-  return { ...authHeader(tkdToken({ globalRole: 'admin', tkdRole: 'ADMIN' })), 'Content-Type': 'application/json' };
+  return { ...authHeader(tkdToken({ role: 'super_admin' })), 'Content-Type': 'application/json' };
 }
 
 let clubId, tournamentId;

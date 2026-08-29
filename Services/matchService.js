@@ -130,10 +130,8 @@ async function endMatch(matchId, winnerId, endReason) {
 async function cancelMatch(matchId, cancelledByRole) {
   const match = await Match.findByPk(matchId);
   if (!match) throw ApiErrors.notFound('Match not found');
-  if (match.status === 'IN_PROGRESS' && cancelledByRole !== 'ADMIN')
-    throw ApiErrors.forbidden('Only Admins can cancel ongoing matches');
-  if (match.status === 'SCHEDULED' && cancelledByRole === 'SCOREKEEPER')
-    throw ApiErrors.forbidden('Scorekeepers cannot cancel matches');
+  if (match.status === 'IN_PROGRESS' && cancelledByRole !== 'super_admin')
+    throw ApiErrors.forbidden('Only super admins can cancel ongoing matches');
   match.status = 'CANCELLED';
   await match.save();
   await MatchEvent.create({ matchId: match.id, type: 'CANCEL', roundNumber: match.currentRound });

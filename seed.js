@@ -6,14 +6,11 @@ const { User, Club, Tournament, Player, Match, TournamentClub, Category } = requ
 const HASH = bcrypt.hashSync('password123', 10);
 
 const users = [
-  { email: 'superadmin@tkd.test', password: HASH, role: 'super_admin', name: 'Super Admin', tkdRole: 'ADMIN' },
-  { email: 'admin@tkd.test', password: HASH, role: 'admin', name: 'Tournament Admin', tkdRole: 'ADMIN' },
-  { email: 'headjudge@tkd.test', password: HASH, role: 'admin', name: 'Head Judge Lee', tkdRole: 'HEAD_JUDGE' },
-  { email: 'judge1@tkd.test', password: HASH, role: 'admin', name: 'Judge Kim', tkdRole: 'MAT_JUDGE' },
-  { email: 'judge2@tkd.test', password: HASH, role: 'admin', name: 'Judge Park', tkdRole: 'MAT_JUDGE' },
-  { email: 'scorekeeper@tkd.test', password: HASH, role: 'admin', name: 'Scorekeeper Choi', tkdRole: 'SCOREKEEPER' },
-  { email: 'coach1@tkd.test', password: HASH, role: 'customer', name: 'Coach Wang' },
-  { email: 'coach2@tkd.test', password: HASH, role: 'customer', name: 'Coach Jung' },
+  { email: 'superadmin@tkd.test', password: HASH, role: 'super_admin', name: 'Super Admin' },
+  { email: 'coach1@tkd.test', password: HASH, role: 'coach', name: 'Coach Wang' },
+  { email: 'coach2@tkd.test', password: HASH, role: 'coach', name: 'Coach Jung' },
+  { email: 'customer1@tkd.test', password: HASH, role: 'customer', name: 'Tournament Fan' },
+  { email: 'customer2@tkd.test', password: HASH, role: 'customer', name: 'Daily Viewer' },
 ];
 
 const clubs = [

@@ -7,10 +7,10 @@ const app = createApp();
 const agent = request.agent(app);
 
 function adminHeaders() {
-  return { ...authHeader(tkdToken({ globalRole: 'admin', tkdRole: 'ADMIN' })), 'Content-Type': 'application/json' };
+  return { ...authHeader(tkdToken({ role: 'super_admin' })), 'Content-Type': 'application/json' };
 }
-function scorekeeperHeaders() {
-  return { ...authHeader(tkdToken({ tkdRole: 'SCOREKEEPER' })), 'Content-Type': 'application/json' };
+function customerHeaders() {
+  return { ...authHeader(tkdToken({ role: 'customer' })), 'Content-Type': 'application/json' };
 }
 
 const DB_FAIL = 401;
@@ -80,8 +80,8 @@ describe('Player Management', () => {
     }
   });
 
-  it('POST /api/v1/players — SCOREKEEPER cannot register', async () => {
-    const res = await agent.post('/api/v1/players').set(scorekeeperHeaders()).send([
+  it('POST /api/v1/players — customer cannot register', async () => {
+    const res = await agent.post('/api/v1/players').set(customerHeaders()).send([
       {
         fullName: 'Should Fail',
         nationalId: '29001011234569',
@@ -110,8 +110,8 @@ describe('Club Management', () => {
     expect([201, DB_FAIL]).toContain(res.status);
   });
 
-  it('POST /api/v1/clubs — SCOREKEEPER cannot create club', async () => {
-    const res = await agent.post('/api/v1/clubs').set(scorekeeperHeaders()).send({ name: 'Should Fail' });
+  it('POST /api/v1/clubs — customer cannot create club', async () => {
+    const res = await agent.post('/api/v1/clubs').set(customerHeaders()).send({ name: 'Should Fail' });
     expect(res.status).toBe(403);
   });
 });
@@ -145,15 +145,15 @@ describe('Tournament Management', () => {
     }
   });
 
-  it('PUT /api/v1/tournaments/:id — SCOREKEEPER cannot update', async () => {
+  it('PUT /api/v1/tournaments/:id — customer cannot update', async () => {
     if (!tournamentId) return;
-    const res = await agent.put(`/api/v1/tournaments/${tournamentId}`).set(scorekeeperHeaders()).send({ name: 'No' });
+    const res = await agent.put(`/api/v1/tournaments/${tournamentId}`).set(customerHeaders()).send({ name: 'No' });
     expect([403, DB_FAIL]).toContain(res.status);
   });
 
-  it('DELETE /api/v1/tournaments/:id — SCOREKEEPER cannot delete', async () => {
+  it('DELETE /api/v1/tournaments/:id — customer cannot delete', async () => {
     if (!tournamentId) return;
-    const res = await agent.delete(`/api/v1/tournaments/${tournamentId}`).set(scorekeeperHeaders());
+    const res = await agent.delete(`/api/v1/tournaments/${tournamentId}`).set(customerHeaders());
     expect([403, DB_FAIL]).toContain(res.status);
   });
 

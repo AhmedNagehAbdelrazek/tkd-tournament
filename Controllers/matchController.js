@@ -58,7 +58,7 @@ const endMatch = async (req, res, next) => {
 
 const cancel = async (req, res, next) => {
   try {
-    const role = req.user?.tkdRole || req.user?.globalRole || 'MAT_JUDGE';
+    const role = req.user?.role || 'CUSTOMER';
     const result = await matchService.cancelMatch(req.params.id, role);
     successResponse(res, result);
   } catch (err) { next(err); }

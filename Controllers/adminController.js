@@ -10,7 +10,7 @@ const listUsers = async (req, res, next) => {
 
 const assignRole = async (req, res, next) => {
   try {
-    const result = await adminService.assignRole(req.params.id, req.body.tkdRole, req.user?.id);
+    const result = await adminService.assignRole(req.params.id, req.body.role, req.user?.id);
     successResponse(res, result);
   } catch (err) { next(err); }
 };

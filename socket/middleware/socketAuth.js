@@ -10,8 +10,8 @@ function socketAuth(io) {
     }
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
-      socket.tkdRole = decoded.tkdRole || decoded.globalRole;
-      socket.tkdUserId = decoded.id;
+      socket.role = decoded.role;
+      socket.userId = decoded.id;
       next();
     } catch (err) {
       next(new Error('Invalid token'));

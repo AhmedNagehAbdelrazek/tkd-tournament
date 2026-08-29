@@ -10,7 +10,6 @@ router.get('/', protect, c.list);
 router.post('/', protect, adminGuard, createPlayerValidation, validate, c.create);
 
 // --- NOT IN DOC (commented out, maybe use later) ---
-// const { tkdRoleGuard } = require('../middlewares/protect');
 // const { bulkCreatePlayerValidation, updatePlayerValidation, deletePlayerValidation } = require('../utils/validators/playerValidator');
 // router.get('/:id', protect, c.getById);
 // router.post('/bulk', protect, adminGuard, bulkCreatePlayerValidation, validate, c.bulkCreate);
